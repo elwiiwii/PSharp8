@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="../../../FixPointCS/Examples/FixMath/FixMath.csproj" />
+  <Project Path="../../../FixPointCS/FixPointCS/FixPointCS.csproj" />
+  <Project Path="../../../FNA/FNA.Core.csproj" />
+  <Project Path="PSharp8.Tests/PSharp8.Tests.csproj" />
+  <Project Path="PSharp8/PSharp8.csproj" />
+</Solution>

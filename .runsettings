@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <FNA_PLATFORM_BACKEND>SDL3</FNA_PLATFORM_BACKEND>
+      <FNA_NO_OPENGL_INTERCEPTION>1</FNA_NO_OPENGL_INTERCEPTION>
+      <FNA3D_FORCE_DRIVER>SDLGPU</FNA3D_FORCE_DRIVER>
+      <SDL_GPU_DRIVER>vulkan</SDL_GPU_DRIVER>
+    </EnvironmentVariables>
+  </RunConfiguration>
+</RunSettings>
