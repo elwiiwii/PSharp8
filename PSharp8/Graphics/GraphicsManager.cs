@@ -6,14 +6,15 @@ namespace PSharp8.Graphics;
 public class GraphicsManager
 {
     private readonly SpriteBatch _batch;
-    private (int X, int Y) _cameraOffset;
+    private (int X, int Y) _cameraOffset = (0, 0);
     private readonly GraphicsDeviceManager _graphics;
     private readonly GraphicsDevice _graphicsDevice;
     private readonly PaletteManager _paletteManager;
     private readonly Texture2D _pixel;
+    private readonly SpriteTextureManager _spriteTextureManager;
     private readonly Dictionary<string, Texture2D> _textureDictionary;
     private readonly GameWindow _window;
-    private readonly SpriteTextureManager _spriteTextureManager;
+    private readonly Func<(int W, int H)> _getCellResolution;
 
     public GraphicsManager(
         SpriteBatch batch,
@@ -21,19 +22,20 @@ public class GraphicsManager
         GraphicsDevice graphicsDevice,
         PaletteManager paletteManager,
         Texture2D pixel,
+        SpriteTextureManager spriteTextureManager,
         Dictionary<string, Texture2D> textureDictionary,
         GameWindow window,
-        SpriteTextureManager spriteTextureManager)
+        Func<(int W, int H)> getCellResolution)
     {
-        _cameraOffset = (0, 0);
+        _batch = batch ?? throw new ArgumentNullException(nameof(batch));
         _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
         _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
         _paletteManager = paletteManager ?? throw new ArgumentNullException(nameof(paletteManager));
         _pixel = pixel ?? throw new ArgumentNullException(nameof(pixel));
+        _spriteTextureManager = spriteTextureManager ?? throw new ArgumentNullException(nameof(spriteTextureManager));
         _textureDictionary = textureDictionary ?? throw new ArgumentNullException(nameof(textureDictionary));
         _window = window ?? throw new ArgumentNullException(nameof(window));
-        _batch = batch ?? throw new ArgumentNullException(nameof(batch));
-        _spriteTextureManager = spriteTextureManager ?? throw new ArgumentNullException(nameof(spriteTextureManager));
+        _getCellResolution = getCellResolution ?? throw new ArgumentNullException(nameof(getCellResolution));
     }
 
     #region DRAWING PRIMITIVES
@@ -370,15 +372,7 @@ public class GraphicsManager
     public void Sspr(int sourceX, int sourceY, int sourceWidth, int sourceHeight, int destX, int destY,
             int destWidth, int destHeight, bool flipX = false, bool flipY = false)
     {
-        if (_spriteTextureManager is null) return;
-        destX -= _cameraOffset.X;
-        destY -= _cameraOffset.Y;
-        Texture2D tex = _spriteTextureManager.GetSpritesheetTexture();
-        Rectangle src = new(sourceX, sourceY, sourceWidth, sourceHeight);
-        Rectangle dst = new(destX, destY, destWidth, destHeight);
-        SpriteEffects effects = (flipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None)
-                              | (flipY ? SpriteEffects.FlipVertically : SpriteEffects.None);
-        _batch.Draw(tex, dst, src, Color.White, 0f, Vector2.Zero, effects, 0f);
+        
     }
 
     /// <summary>
@@ -386,12 +380,7 @@ public class GraphicsManager
     /// </summary>
     public void Map(int sourceX, int sourceY, int destX, int destY, int sourceWidth, int sourceHeight, int flags = 0)
     {
-        if (_spriteTextureManager is null) return;
-        destX -= _cameraOffset.X;
-        destY -= _cameraOffset.Y;
-        Texture2D tex = _spriteTextureManager.GetMapRegionTexture(sourceX, sourceY, sourceWidth, sourceHeight, flags);
-        Rectangle dst = new(destX, destY, sourceWidth * 8, sourceHeight * 8);
-        _batch.Draw(tex, dst, null, Color.White);
+        
     }
 
     public void Tick()
@@ -423,9 +412,27 @@ public class GraphicsManager
     public void DrawScaledPixel(double x, double y, Color color, double scaleX = 1,
             double scaleY = 1, bool flipX = false, bool flipY = false)
     {
+        var (pixScaleX, pixScaleY) = ComputeViewportScales();
         _batch.Draw(_pixel,
-            new Rectangle((int)x, (int)y, Math.Max(1, (int)scaleX), Math.Max(1, (int)scaleY)),
+            new Rectangle(
+                (int)x * pixScaleX,
+                (int)y * pixScaleY,
+                Math.Max(1, (int)scaleX * pixScaleX),
+                Math.Max(1, (int)scaleY * pixScaleY)),
             color);
+    }
+
+    /// <summary>
+    /// Returns the integer pixel scale factors that map one cell unit to pixels
+    /// on the X and Y axes independently.
+    /// Each axis uses the largest integer multiplier that fits the cell grid
+    /// within the viewport on that axis — no letterboxing, no shared scale.
+    /// </summary>
+    private (int scaleX, int scaleY) ComputeViewportScales()
+    {
+        var vp = _graphicsDevice.Viewport;
+        var (cellW, cellH) = _getCellResolution();
+        return (Math.Max(1, vp.Width / cellW), Math.Max(1, vp.Height / cellH));
     }
 
     public void DrawLine(Vector2 start, Vector2 end, Color color, double thickness)

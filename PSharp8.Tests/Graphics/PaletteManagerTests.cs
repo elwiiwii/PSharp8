@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using PSharp8.Graphics;
 using Xunit;
 
-namespace PSharp8.Tests;
+namespace PSharp8.Tests.Graphics;
 
 public class PaletteManagerTests
 {
@@ -14,7 +14,7 @@ public class PaletteManagerTests
     private static readonly Color Red = new(0xFF, 0x00, 0x4D, 255);
 
     // -------------------------------------------------------------------------
-    // Construction
+    #region Construction
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -56,7 +56,8 @@ public class PaletteManagerTests
     }
 
     // -------------------------------------------------------------------------
-    // SetPalette
+    #endregion
+    #region SetPalette
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -81,7 +82,8 @@ public class PaletteManagerTests
     }
 
     // -------------------------------------------------------------------------
-    // SetTransparency
+    #endregion
+    #region SetTransparency
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -126,7 +128,8 @@ public class PaletteManagerTests
     }
 
     // -------------------------------------------------------------------------
-    // ResetPalette
+    #endregion
+    #region ResetPalette
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -165,7 +168,8 @@ public class PaletteManagerTests
     }
 
     // -------------------------------------------------------------------------
-    // ResetTransparency
+    #endregion
+    #region ResetTransparency
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -193,7 +197,8 @@ public class PaletteManagerTests
     }
 
     // -------------------------------------------------------------------------
-    // Version accumulation
+    #endregion
+    #region Version accumulation
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -209,4 +214,6 @@ public class PaletteManagerTests
 
         pm.PaletteVersion.Should().Be(baseline + 4);
     }
+
+    #endregion
 }

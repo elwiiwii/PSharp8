@@ -5,7 +5,7 @@ using PSharp8.Graphics;
 using PSharp8.Tests.Infrastructure;
 using Xunit;
 
-namespace PSharp8.Tests;
+namespace PSharp8.Tests.Graphics;
 
 [Collection("Graphics")]
 public class SpriteTextureManagerTests : IDisposable
@@ -27,7 +27,7 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Helpers
+    #region Helpers
     // -------------------------------------------------------------------------
 
     private Texture2D MakeSolid(int width, int height, Color color)
@@ -60,7 +60,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Constructor – argument validation
+    #endregion
+    #region Constructor – argument validation
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -111,7 +112,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetSpritesheetTexture – basic usage
+    #endregion
+    #region GetSpritesheetTexture – basic usage
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -148,7 +150,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetSpritesheetTexture – caching
+    #endregion
+    #region GetSpritesheetTexture – caching
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -203,7 +206,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetMapRegionTexture – basic usage
+    #endregion
+    #region GetMapRegionTexture – basic usage
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -265,7 +269,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetMapRegionTexture – caching
+    #endregion
+    #region GetMapRegionTexture – caching
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -316,7 +321,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetSpriteSourceRect – delegation
+    #endregion
+    #region GetSpriteSourceRect – delegation
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -331,7 +337,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Dispose
+    #endregion
+    #region Dispose
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -367,7 +374,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetSpriteTexture – basic usage
+    #endregion
+    #region GetSpriteTexture – basic usage
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -403,7 +411,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetSpriteTexture – caching
+    #endregion
+    #region GetSpriteTexture – caching
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -493,7 +502,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetSpriteTexture – TTL eviction
+    #endregion
+    #region GetSpriteTexture – TTL eviction
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -524,7 +534,8 @@ public class SpriteTextureManagerTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Dispose – sprite cache
+    #endregion
+    #region Dispose – sprite cache
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -537,4 +548,6 @@ public class SpriteTextureManagerTests : IDisposable
 
         tex.IsDisposed.Should().BeTrue();
     }
+
+    #endregion
 }

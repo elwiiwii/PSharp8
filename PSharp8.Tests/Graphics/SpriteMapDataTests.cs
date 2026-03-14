@@ -5,7 +5,7 @@ using PSharp8.Graphics;
 using PSharp8.Tests.Infrastructure;
 using Xunit;
 
-namespace PSharp8.Tests;
+namespace PSharp8.Tests.Graphics;
 
 [Collection("Graphics")]
 public class SpriteMapDataTests : IDisposable
@@ -31,7 +31,7 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Helpers
+    #region Helpers
     // -------------------------------------------------------------------------
 
     private Texture2D MakeSolid(int width, int height, Color color)
@@ -85,7 +85,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Constructor – argument validation
+    #endregion
+    #region Constructor – argument validation
     // -------------------------------------------------------------------------
 
     [Theory]
@@ -119,7 +120,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Constructor – dimensions and initial versions
+    #endregion
+    #region Constructor – dimensions and initial versions
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -148,7 +150,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Flag loading from flag string
+    #endregion
+    #region Flag loading from flag string
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -180,7 +183,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetFlag(n, bit) / SetFlag(n, bit, bool)
+    #endregion
+    #region GetFlag(n, bit) / SetFlag(n, bit, bool)
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -224,7 +228,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // SetFlag(n, value)
+    #endregion
+    #region SetFlag(n, value)
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -251,7 +256,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Sprite pixel operations
+    #endregion
+    #region Sprite pixel operations
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -307,7 +313,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Map tile operations
+    #endregion
+    #region Map tile operations
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -359,7 +366,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // Reload
+    #endregion
+    #region Reload
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -402,7 +410,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // MapToSpritesheet1D
+    #endregion
+    #region MapToSpritesheet1D
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -438,7 +447,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // MapToSpritesheet2D
+    #endregion
+    #region MapToSpritesheet2D
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -476,7 +486,8 @@ public class SpriteMapDataTests : IDisposable
     }
 
     // -------------------------------------------------------------------------
-    // GetSpriteSourceRect
+    #endregion
+    #region GetSpriteSourceRect
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -515,4 +526,6 @@ public class SpriteMapDataTests : IDisposable
         rect.Width.Should().Be(16);
         rect.Height.Should().Be(24);
     }
+
+    #endregion
 }

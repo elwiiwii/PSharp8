@@ -23,6 +23,8 @@ public sealed class GraphicsFixture : IDisposable
     }
 
     public GraphicsDevice GraphicsDevice => _game.GraphicsDevice;
+    public GraphicsDeviceManager GraphicsDeviceManager => _game.GraphicsDeviceManager;
+    public GameWindow Window => _game.Window;
 
     public void Dispose() => _game.Dispose();
 
@@ -55,11 +57,13 @@ public sealed class GraphicsFixture : IDisposable
 
     private sealed class TestGame : Game
     {
+        public GraphicsDeviceManager GraphicsDeviceManager { get; }
+
         public TestGame()
         {
             // Registering GraphicsDeviceManager is sufficient; it wires itself to
             // the Game's Services and creates GraphicsDevice during Initialize().
-            _ = new GraphicsDeviceManager(this);
+            GraphicsDeviceManager = new GraphicsDeviceManager(this);
         }
 
         protected override void Initialize()

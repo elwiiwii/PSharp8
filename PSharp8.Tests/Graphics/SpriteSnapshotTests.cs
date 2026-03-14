@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using PSharp8.Graphics;
 using Xunit;
 
-namespace PSharp8.Tests;
+namespace PSharp8.Tests.Graphics;
 
 public class SpriteSnapshotTests
 {
