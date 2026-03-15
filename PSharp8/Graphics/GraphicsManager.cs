@@ -302,6 +302,17 @@ public class GraphicsManager
 
     #region RENDERING OPERATIONS
 
+    /// <summary>
+    /// https://pico-8.fandom.com/wiki/Map
+    /// </summary>
+    public void Map(int sourceX, int sourceY, int destX, int destY, int sourceWidth, int sourceHeight, int flags = 0)
+    {
+        
+    }
+
+    /// <summary>
+    /// https://pico-8.fandom.com/wiki/Print
+    /// </summary>
     public void Print(string text, int x, int y, Color color, Font font)
     {
         x -= _cameraOffset.X;
@@ -318,7 +329,7 @@ public class GraphicsManager
             int charHeight = 0;
             int srcY = 0;
 
-            foreach (var (chars, size) in font.Characters)
+            foreach (var (size, chars) in font.Characters)
             {
                 int idx = chars.IndexOf(c);
                 if (idx >= 0)
@@ -333,7 +344,7 @@ public class GraphicsManager
 
             if (charIndex < 0)
             {
-                cursorX += font.Characters.First().Value.Width;
+                cursorX += font.Characters.First().Key.Width;
                 continue;
             }
 
@@ -372,19 +383,6 @@ public class GraphicsManager
             int destWidth, int destHeight, bool flipX = false, bool flipY = false)
     {
         
-    }
-
-    /// <summary>
-    /// https://pico-8.fandom.com/wiki/Map
-    /// </summary>
-    public void Map(int sourceX, int sourceY, int destX, int destY, int sourceWidth, int sourceHeight, int flags = 0)
-    {
-        
-    }
-
-    public void Tick()
-    {
-        _spriteTextureManager?.Tick();
     }
 
     #endregion
