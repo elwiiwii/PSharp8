@@ -8,41 +8,17 @@ using Xunit;
 namespace PSharp8.Tests.Graphics;
 
 [Collection("Graphics")]
-public class SpriteMapDataTests : IDisposable
+public class SpriteMapDataTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
 {
     // -------------------------------------------------------------------------
     // Well-known Pico-8 colours, used to paint test textures
     // -------------------------------------------------------------------------
-    private static readonly Color Black     = new(0x00, 0x00, 0x00, 255); // palette index 0
-    private static readonly Color DarkBlue  = new(0x1D, 0x2B, 0x53, 255); // palette index 1
     private static readonly Color DarkGreen = new(0x00, 0x87, 0x51, 255); // palette index 3
     private static readonly Color Brown     = new(0xAB, 0x52, 0x36, 255); // palette index 4
-
-    private readonly GraphicsDevice _gd;
-    // Tracks all textures created per-test so they stay alive for Reload() calls
-    private readonly List<Texture2D> _ownedTextures = new();
-
-    public SpriteMapDataTests(GraphicsFixture fixture) => _gd = fixture.GraphicsDevice;
-
-    public void Dispose()
-    {
-        foreach (var t in _ownedTextures)
-            if (!t.IsDisposed) t.Dispose();
-    }
 
     // -------------------------------------------------------------------------
     #region Helpers
     // -------------------------------------------------------------------------
-
-    private Texture2D MakeSolid(int width, int height, Color color)
-    {
-        var tex = new Texture2D(_gd, width, height);
-        var data = new Color[width * height];
-        Array.Fill(data, color);
-        tex.SetData(data);
-        _ownedTextures.Add(tex);
-        return tex;
-    }
 
     // Creates a 2-sprite-wide × 1-sprite-tall spritesheet (16×8):
     //   Sprite 0 (x 0..7) filled with DarkBlue

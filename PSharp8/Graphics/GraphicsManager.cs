@@ -7,6 +7,7 @@ public class GraphicsManager
 {
     private readonly SpriteBatch _batch;
     private (int X, int Y) _cameraOffset = (0, 0);
+    private readonly Func<(int W, int H)> _getSceneResolution;
     private readonly GraphicsDeviceManager _graphics;
     private readonly GraphicsDevice _graphicsDevice;
     private readonly PaletteManager _paletteManager;
@@ -14,20 +15,20 @@ public class GraphicsManager
     private readonly SpriteTextureManager _spriteTextureManager;
     private readonly Dictionary<string, Texture2D> _textureDictionary;
     private readonly GameWindow _window;
-    private readonly Func<(int W, int H)> _getCellResolution;
 
     public GraphicsManager(
         SpriteBatch batch,
+        Func<(int W, int H)> getSceneResolution,
         GraphicsDeviceManager graphics,
         GraphicsDevice graphicsDevice,
         PaletteManager paletteManager,
         Texture2D pixel,
         SpriteTextureManager spriteTextureManager,
         Dictionary<string, Texture2D> textureDictionary,
-        GameWindow window,
-        Func<(int W, int H)> getCellResolution)
+        GameWindow window)
     {
         _batch = batch ?? throw new ArgumentNullException(nameof(batch));
+        _getSceneResolution = getSceneResolution ?? throw new ArgumentNullException(nameof(getSceneResolution));
         _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
         _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
         _paletteManager = paletteManager ?? throw new ArgumentNullException(nameof(paletteManager));
@@ -35,7 +36,6 @@ public class GraphicsManager
         _spriteTextureManager = spriteTextureManager ?? throw new ArgumentNullException(nameof(spriteTextureManager));
         _textureDictionary = textureDictionary ?? throw new ArgumentNullException(nameof(textureDictionary));
         _window = window ?? throw new ArgumentNullException(nameof(window));
-        _getCellResolution = getCellResolution ?? throw new ArgumentNullException(nameof(getCellResolution));
     }
 
     #region DRAWING PRIMITIVES
@@ -45,12 +45,12 @@ public class GraphicsManager
     /// </summary>
     public void Circ(int centerX, int centerY, int radius, Color color)
     {
-        if (radius <= 0) return;
+        if (radius < 0) return;
 
         centerX -= _cameraOffset.X;
         centerY -= _cameraOffset.Y;
 
-        for (int dx = radius, dy = 0, error = 0; dx >= dy; )
+        IterateMidpointArc(radius, (dx, dy) =>
         {
             DrawScaledPixel(centerX + dx, centerY + dy, color, 1, 1);
             DrawScaledPixel(centerX + dy, centerY + dx, color, 1, 1);
@@ -60,16 +60,7 @@ public class GraphicsManager
             DrawScaledPixel(centerX - dy, centerY - dx, color, 1, 1);
             DrawScaledPixel(centerX + dy, centerY - dx, color, 1, 1);
             DrawScaledPixel(centerX + dx, centerY - dy, color, 1, 1);
-
-            dy += 1;
-            if (error < radius - 1)
-                error += 1 + 2 * dy;
-            else
-            {
-                dx -= 1;
-                error += 1 + 2 * (dy - dx);
-            }
-        }
+        });
     }
 
     /// <summary>
@@ -77,27 +68,18 @@ public class GraphicsManager
     /// </summary>
     public void Circfill(int centerX, int centerY, int radius, Color color)
     {
-        if (radius <= 0) return;
+        if (radius < 0) return;
 
         centerX -= _cameraOffset.X;
         centerY -= _cameraOffset.Y;
 
-        for (int dx = radius, dy = 0, error = 0; dx >= dy; )
+        IterateMidpointArc(radius, (dx, dy) =>
         {
             DrawScaledPixel(centerX - dx, centerY + dy, color, 2 * dx + 1, 1);
             DrawScaledPixel(centerX - dx, centerY - dy, color, 2 * dx + 1, 1);
             DrawScaledPixel(centerX - dy, centerY + dx, color, 2 * dy + 1, 1);
             DrawScaledPixel(centerX - dy, centerY - dx, color, 2 * dy + 1, 1);
-
-            dy += 1;
-            if (error < radius - 1)
-                error += 1 + 2 * dy;
-            else
-            {
-                dx -= 1;
-                error += 1 + 2 * (dy - dx);
-            }
-        }
+        });
     }
 
     /// <summary>
@@ -109,10 +91,50 @@ public class GraphicsManager
     }
 
     /// <summary>
+    /// https://pico-8.fandom.com/wiki/Line
+    /// </summary>
+    public void Line(int startX, int startY, int endX, int endY, Color color)
+    {
+        startX -= _cameraOffset.X;
+        startY -= _cameraOffset.Y;
+        endX -= _cameraOffset.X;
+        endY -= _cameraOffset.Y;
+
+        bool horiz = Math.Abs(endX - startX) >= Math.Abs(endY - startY);
+        int dx = startX <= endX ? 1 : -1;
+        int dy = startY <= endY ? 1 : -1;
+        int x = startX;
+        int y = startY;
+
+        for (;;)
+        {
+            DrawScaledPixel(x, y, color, 1, 1);
+
+            if (horiz)
+            {
+                if (x == endX) break;
+                x += dx;
+                y = (int)Math.Round(startY + (double)(endY - startY) * (x - startX) / (endX - startX),
+                    MidpointRounding.AwayFromZero);
+            }
+            else
+            {
+                if (y == endY) break;
+                y += dy;
+                x = (int)Math.Round(startX + (double)(endX - startX) * (y - startY) / (endY - startY),
+                    MidpointRounding.AwayFromZero);
+            }
+        }
+    }
+
+    /// <summary>
     /// https://pico-8.fandom.com/wiki/Pset
     /// </summary>
     public void Pset(int x, int y, Color color)
     {
+        x -= _cameraOffset.X;
+        y -= _cameraOffset.Y;
+
         DrawScaledPixel(x, y, color, 1, 1);
     }
 
@@ -121,10 +143,10 @@ public class GraphicsManager
     /// </summary>
     public void Rect(int xLeft, int yTop, int xRight, int yBottom, Color color)
     {
-        xLeft -= _cameraOffset.X;
-        yTop -= _cameraOffset.Y;
         int width = xRight - xLeft + 1;
         int height = yBottom - yTop + 1;
+        xLeft -= _cameraOffset.X;
+        yTop -= _cameraOffset.Y;
 
         DrawScaledPixel(xLeft, yTop, color, width, 1);
         DrawScaledPixel(xLeft, yTop + height - 1, color, width, 1);
@@ -137,10 +159,10 @@ public class GraphicsManager
     /// </summary>
     public void Rectfill(int xLeft, int yTop, int xRight, int yBottom, Color color)
     {
-        xLeft -= _cameraOffset.X;
-        yTop -= _cameraOffset.Y;
         int width = xRight - xLeft + 1;
         int height = yBottom - yTop + 1;
+        xLeft -= _cameraOffset.X;
+        yTop -= _cameraOffset.Y;
 
         DrawScaledPixel(xLeft, yTop, color, width, height);
     }
@@ -155,49 +177,39 @@ public class GraphicsManager
         x -= _cameraOffset.X;
         y -= _cameraOffset.Y;
 
-        int r = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
+        int cornerRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
 
-        //if (r == 0)
-        //{
-        //    Rect(x, y, x + width - 1, y + height - 1, color);
-        //    return;
-        //}
-
-        // Straight edges (shortened by r on each end)
-        int edgeW = width - 2 * r;
-        int edgeH = height - 2 * r;
-        if (edgeW > 0)
+        // Straight edges (shortened by cornerRadius on each end)
+        int straightEdgeWidth  = width  - 2 * cornerRadius;
+        int straightEdgeHeight = height - 2 * cornerRadius;
+        if (straightEdgeWidth > 0)
         {
-            DrawScaledPixel(x + r, y, color, edgeW, 1);               // Top
-            DrawScaledPixel(x + r, y + height - 1, color, edgeW, 1);  // Bottom
+            DrawScaledPixel(x + cornerRadius, y,                color, straightEdgeWidth, 1);  // Top
+            DrawScaledPixel(x + cornerRadius, y + height - 1,   color, straightEdgeWidth, 1);  // Bottom
         }
-        if (edgeH > 0)
+        if (straightEdgeHeight > 0)
         {
-            DrawScaledPixel(x, y + r, color, 1, edgeH);               // Left
-            DrawScaledPixel(x + width - 1, y + r, color, 1, edgeH);   // Right
+            DrawScaledPixel(x,             y + cornerRadius, color, 1, straightEdgeHeight);  // Left
+            DrawScaledPixel(x + width - 1, y + cornerRadius, color, 1, straightEdgeHeight);  // Right
         }
 
         // Corner arc centers (one quadrant per corner via midpoint algorithm)
-        int tlx = x + r, tly = y + r;
-        int trx = x + width - 1 - r, try_ = y + r;
-        int blx = x + r, bly = y + height - 1 - r;
-        int brx = x + width - 1 - r, bry = y + height - 1 - r;
+        int topLeftX     = x + cornerRadius,         topLeftY     = y + cornerRadius;
+        int topRightX    = x + width - 1 - cornerRadius, topRightY = y + cornerRadius;
+        int bottomLeftX  = x + cornerRadius,         bottomLeftY  = y + height - 1 - cornerRadius;
+        int bottomRightX = x + width - 1 - cornerRadius, bottomRightY = y + height - 1 - cornerRadius;
 
-        for (int dx = r, dy = 0, error = 0; dx >= dy; )
+        IterateMidpointArc(cornerRadius, (dx, dy) =>
         {
-            DrawScaledPixel(tlx - dx, tly - dy, color);   // Top-left
-            DrawScaledPixel(tlx - dy, tly - dx, color);
-            DrawScaledPixel(trx + dx, try_ - dy, color);  // Top-right
-            DrawScaledPixel(trx + dy, try_ - dx, color);
-            DrawScaledPixel(blx - dx, bly + dy, color);   // Bottom-left
-            DrawScaledPixel(blx - dy, bly + dx, color);
-            DrawScaledPixel(brx + dx, bry + dy, color);   // Bottom-right
-            DrawScaledPixel(brx + dy, bry + dx, color);
-
-            dy++;
-            if (error < r - 1) error += 1 + 2 * dy;
-            else { dx--; error += 1 + 2 * (dy - dx); }
-        }
+            DrawScaledPixel(topLeftX     - dx, topLeftY     - dy, color);  // Top-left
+            DrawScaledPixel(topLeftX     - dy, topLeftY     - dx, color);
+            DrawScaledPixel(topRightX    + dx, topRightY    - dy, color);  // Top-right
+            DrawScaledPixel(topRightX    + dy, topRightY    - dx, color);
+            DrawScaledPixel(bottomLeftX  - dx, bottomLeftY  + dy, color);  // Bottom-left
+            DrawScaledPixel(bottomLeftX  - dy, bottomLeftY  + dx, color);
+            DrawScaledPixel(bottomRightX + dx, bottomRightY + dy, color);  // Bottom-right
+            DrawScaledPixel(bottomRightX + dy, bottomRightY + dx, color);
+        });
     }
 
     /// <summary>
@@ -210,51 +222,38 @@ public class GraphicsManager
         x -= _cameraOffset.X;
         y -= _cameraOffset.Y;
 
-        int r = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
-
-        //if (r == 0)
-        //{
-        //    Rectfill(x, y, x + width - 1, y + height - 1, color);
-        //    return;
-        //}
+        int cornerRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
 
         // Middle band — full width, between the two corner bands
-        int edgeH = height - 2 * r;
-        if (edgeH > 0)
-            DrawScaledPixel(x, y + r, color, width, edgeH);
+        int middleBandHeight = height - 2 * cornerRadius;
+        if (middleBandHeight > 0)
+            DrawScaledPixel(x, y + cornerRadius, color, width, middleBandHeight);
 
         // Corner regions filled via horizontal scanlines using midpoint algorithm.
-        // tlx/trx: x centers of left/right corner columns
-        // tly/bly: y centers of top/bottom corner rows
-        int tlx = x + r;
-        int trx = x + width - 1 - r;
-        int tly = y + r;
-        int bly = y + height - 1 - r;
+        int leftArcCenterX   = x + cornerRadius;
+        int rightArcCenterX  = x + width - 1 - cornerRadius;
+        int topArcCenterY    = y + cornerRadius;
+        int bottomArcCenterY = y + height - 1 - cornerRadius;
 
-        for (int dx = r, dy = 0, error = 0; dx >= dy; )
+        IterateMidpointArc(cornerRadius, (dx, dy) =>
         {
-            // Scanline at vertical offset dy from corner center
-            // Spans from (tlx - dx) to (trx + dx)
-            int left1 = tlx - dx;
-            int w1 = trx + dx - left1 + 1; // = width - 2*r + 2*dx
-            DrawScaledPixel(left1, tly - dy, color, w1, 1);  // Top band
-            if (bly + dy != tly - dy)
-                DrawScaledPixel(left1, bly + dy, color, w1, 1);  // Bottom band
+            // Wide scanline: vertical offset dy, horizontal span covers 2*dx+1 cells
+            int wideLeft  = leftArcCenterX - dx;
+            int wideWidth = rightArcCenterX + dx - wideLeft + 1; // = width - 2*cornerRadius + 2*dx
+            DrawScaledPixel(wideLeft, topArcCenterY    - dy, color, wideWidth, 1);  // Top band
+            if (bottomArcCenterY + dy != topArcCenterY - dy)
+                DrawScaledPixel(wideLeft, bottomArcCenterY + dy, color, wideWidth, 1);  // Bottom band
 
-            // Scanline at vertical offset dx from corner center (other octant)
+            // Narrow scanline: vertical offset dx, horizontal span covers 2*dy+1 cells (other octant)
             if (dx != dy)
             {
-                int left2 = tlx - dy;
-                int w2 = trx + dy - left2 + 1; // = width - 2*r + 2*dy
-                DrawScaledPixel(left2, tly - dx, color, w2, 1);  // Top band
-                if (bly + dx != tly - dx)
-                    DrawScaledPixel(left2, bly + dx, color, w2, 1);  // Bottom band
+                int narrowLeft  = leftArcCenterX - dy;
+                int narrowWidth = rightArcCenterX + dy - narrowLeft + 1; // = width - 2*cornerRadius + 2*dy
+                DrawScaledPixel(narrowLeft, topArcCenterY    - dx, color, narrowWidth, 1);  // Top band
+                if (bottomArcCenterY + dx != topArcCenterY - dx)
+                    DrawScaledPixel(narrowLeft, bottomArcCenterY + dx, color, narrowWidth, 1);  // Bottom band
             }
-
-            dy++;
-            if (error < r - 1) error += 1 + 2 * dy;
-            else { dx--; error += 1 + 2 * (dy - dx); }
-        }
+        });
     }
 
     #endregion
@@ -388,17 +387,6 @@ public class GraphicsManager
         _spriteTextureManager?.Tick();
     }
 
-    /// <summary>
-    /// https://pico-8.fandom.com/wiki/Line
-    /// </summary>
-    public void Line(int x0, int y0, int x1, int y1, Color c)
-    {
-        x0 -= _cameraOffset.X;
-        y0 -= _cameraOffset.Y;
-        x1 -= _cameraOffset.X;
-        y1 -= _cameraOffset.Y;
-    }
-
     #endregion
 
     #region LOW-LEVEL DRAWING
@@ -431,8 +419,26 @@ public class GraphicsManager
     private (int scaleX, int scaleY) ComputeViewportScales()
     {
         var vp = _graphicsDevice.Viewport;
-        var (cellW, cellH) = _getCellResolution();
+        var (cellW, cellH) = _getSceneResolution();
         return (Math.Max(1, vp.Width / cellW), Math.Max(1, vp.Height / cellH));
+    }
+
+    private static void IterateMidpointArc(int radius, Action<int, int> onStep)
+    {
+        for (int dx = radius, dy = 0, error = 0; dx >= dy; )
+        {
+            onStep(dx, dy);
+            dy++;
+            if (error < radius - 1)
+            {
+                error += 1 + 2 * dy;
+            }
+            else
+            {
+                dx--;
+                error += 1 + 2 * (dy - dx);
+            }
+        }
     }
 
     public void DrawLine(Vector2 start, Vector2 end, Color color, double thickness)

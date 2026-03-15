@@ -8,37 +8,14 @@ using Xunit;
 namespace PSharp8.Tests.Graphics;
 
 [Collection("Graphics")]
-public class SpriteTextureManagerTests : IDisposable
+public class SpriteTextureManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
 {
-    private static readonly Color DarkBlue  = new(0x1D, 0x2B, 0x53, 255); // palette index 1
     private static readonly Color DarkGreen = new(0x00, 0x87, 0x51, 255); // palette index 3
-    private static readonly Color Red       = new(0xFF, 0x00, 0x4D, 255); // palette index 8
     private static readonly Color Brown     = new(0xAB, 0x52, 0x36, 255); // palette index 4
-
-    private readonly GraphicsDevice _gd;
-    private readonly List<Texture2D> _ownedTextures = new();
-
-    public SpriteTextureManagerTests(GraphicsFixture fixture) => _gd = fixture.GraphicsDevice;
-
-    public void Dispose()
-    {
-        foreach (var t in _ownedTextures)
-            if (!t.IsDisposed) t.Dispose();
-    }
 
     // -------------------------------------------------------------------------
     #region Helpers
     // -------------------------------------------------------------------------
-
-    private Texture2D MakeSolid(int width, int height, Color color)
-    {
-        var tex = new Texture2D(_gd, width, height);
-        var data = new Color[width * height];
-        Array.Fill(data, color);
-        tex.SetData(data);
-        _ownedTextures.Add(tex);
-        return tex;
-    }
 
     private static LruCache<SpriteSnapshot, Texture2D> MakeCache(int staleTtlFrames = 300)
         => new(staleTtlFrames);
