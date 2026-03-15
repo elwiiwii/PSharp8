@@ -10,9 +10,6 @@ namespace PSharp8.Tests.Graphics;
 [Collection("Graphics")]
 public class SpriteTextureManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
 {
-    private static readonly Color DarkGreen = new(0x00, 0x87, 0x51, 255); // palette index 3
-    private static readonly Color Brown     = new(0xAB, 0x52, 0x36, 255); // palette index 4
-
     // -------------------------------------------------------------------------
     #region Helpers
     // -------------------------------------------------------------------------

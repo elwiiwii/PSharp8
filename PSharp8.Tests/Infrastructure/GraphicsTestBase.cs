@@ -16,8 +16,8 @@ public abstract class GraphicsTestBase : IDisposable
     protected static readonly Color DarkBlue  = new(0x1D, 0x2B, 0x53, 255);
     protected static readonly Color DarkGreen = new(0x00, 0x87, 0x51, 255);
     protected static readonly Color Brown     = new(0xAB, 0x52, 0x36, 255);
-    protected static readonly Color Red       = new(0xFF, 0x00, 0x4D, 255);
     protected static readonly Color White     = new(0xFF, 0xFF, 0xFF, 255);
+    protected static readonly Color Red       = new(0xFF, 0x00, 0x4D, 255);
 
     protected readonly GraphicsFixture _fixture;
     protected readonly GraphicsDevice _gd;
