@@ -16,7 +16,7 @@ public static class Pico8
         _orchestrator.Value = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
     }
 
-    public static Dictionary<Color, Color> Palette => new() {
+    public static Dictionary<Color, Color> BasePalette => new() {
         { new(0x00, 0x00, 0x00, 255), new(0x00, 0x00, 0x00, 0) }, // 00 black
         { new(0x1D, 0x2B, 0x53, 255), new(0x1D, 0x2B, 0x53, 255) }, // 01 dark-blue
         { new(0x7E, 0x25, 0x53, 255), new(0x7E, 0x25, 0x53, 255) }, // 02 dark-purple
@@ -86,14 +86,14 @@ public static class Pico8
     /// https://pico-8.fandom.com/wiki/Circ
     /// </summary>
     public static void Circ(double x, double y, double radius, double color)
-        => Orch.GraphicsManager.Circ((int)x, (int)y, (int)radius, Palette.ElementAt((int)color).Key);
+        => Orch.GraphicsManager.Circ((int)x, (int)y, (int)radius, BasePalette.ElementAt((int)color).Key);
 
     public static void Circ(double x, double y, double radius, Color color)
         => Orch.GraphicsManager.Circ((int)x, (int)y, (int)radius, color);
 
     public static void Circ(F32 x, F32 y, F32 radius, F32 color)
         => Orch.GraphicsManager.Circ(F32.FloorToInt(x), F32.FloorToInt(y),
-                F32.FloorToInt(radius), Palette.ElementAt(F32.FloorToInt(color)).Key);
+                F32.FloorToInt(radius), BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Circ(F32 x, F32 y, F32 radius, Color color)
         => Orch.GraphicsManager.Circ(F32.FloorToInt(x), F32.FloorToInt(y),
@@ -103,14 +103,14 @@ public static class Pico8
     /// https://pico-8.fandom.com/wiki/Circfill
     /// </summary>
     public static void Circfill(double x, double y, double radius, double color)
-        => Orch.GraphicsManager.Circfill((int)x, (int)y, (int)radius, Palette.ElementAt((int)color).Key);
+        => Orch.GraphicsManager.Circfill((int)x, (int)y, (int)radius, BasePalette.ElementAt((int)color).Key);
 
     public static void Circfill(double x, double y, double radius, Color color)
         => Orch.GraphicsManager.Circfill((int)x, (int)y, (int)radius, color);
 
     public static void Circfill(F32 x, F32 y, F32 radius, F32 color)
         => Orch.GraphicsManager.Circfill(F32.FloorToInt(x), F32.FloorToInt(y),
-                F32.FloorToInt(radius), Palette.ElementAt(F32.FloorToInt(color)).Key);
+                F32.FloorToInt(radius), BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Circfill(F32 x, F32 y, F32 radius, Color color)
         => Orch.GraphicsManager.Circfill(F32.FloorToInt(x), F32.FloorToInt(y),
@@ -120,7 +120,7 @@ public static class Pico8
     /// https://pico-8.fandom.com/wiki/Cls
     /// </summary>
     public static void Cls(double color = 0)
-        => Orch.GraphicsManager.Cls(Palette.ElementAt((int)color).Key);
+        => Orch.GraphicsManager.Cls(BasePalette.ElementAt((int)color).Key);
 
     public static void Cls(Color color)
         => Orch.GraphicsManager.Cls(color);
@@ -130,14 +130,14 @@ public static class Pico8
     /// </summary>
     public static void Line(double xStart, double yStart, double xEnd, double yEnd, double color)
         => Orch.GraphicsManager.Line((int)xStart, (int)yStart, (int)xEnd, (int)yEnd,
-                Palette.ElementAt((int)color).Key);
+                BasePalette.ElementAt((int)color).Key);
 
     public static void Line(double xStart, double yStart, double xEnd, double yEnd, Color color)
         => Orch.GraphicsManager.Line((int)xStart, (int)yStart, (int)xEnd, (int)yEnd, color);
 
     public static void Line(F32 xStart, F32 yStart, F32 xEnd, F32 yEnd, F32 color)
         => Orch.GraphicsManager.Line(F32.FloorToInt(xStart), F32.FloorToInt(yStart),
-                F32.FloorToInt(xEnd), F32.FloorToInt(yEnd), Palette.ElementAt(F32.FloorToInt(color)).Key);
+                F32.FloorToInt(xEnd), F32.FloorToInt(yEnd), BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Line(F32 xStart, F32 yStart, F32 xEnd, F32 yEnd, Color color)
         => Orch.GraphicsManager.Line(F32.FloorToInt(xStart), F32.FloorToInt(yStart),
@@ -163,18 +163,18 @@ public static class Pico8
         => Orch.GraphicsManager.Pal();
 
     public static void Pal(double index, double value)
-        => Orch.GraphicsManager.Pal(Palette.ElementAt((int)index).Key,
-                Palette.ElementAt((int)value).Key);
+        => Orch.GraphicsManager.Pal(BasePalette.ElementAt((int)index).Key,
+                BasePalette.ElementAt((int)value).Key);
 
     public static void Pal(double index, Color color)
-        => Orch.GraphicsManager.Pal(Palette.ElementAt((int)index).Key, color);
+        => Orch.GraphicsManager.Pal(BasePalette.ElementAt((int)index).Key, color);
 
     public static void Pal(F32 index, F32 color)
-        => Orch.GraphicsManager.Pal(Palette.ElementAt(F32.FloorToInt(index)).Key,
-                Palette.ElementAt(F32.FloorToInt(color)).Key);
+        => Orch.GraphicsManager.Pal(BasePalette.ElementAt(F32.FloorToInt(index)).Key,
+                BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Pal(F32 index, Color color)
-        => Orch.GraphicsManager.Pal(Palette.ElementAt(F32.FloorToInt(index)).Key, color);
+        => Orch.GraphicsManager.Pal(BasePalette.ElementAt(F32.FloorToInt(index)).Key, color);
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Palt
@@ -183,29 +183,29 @@ public static class Pico8
         => Orch.GraphicsManager.Palt();
 
     public static void Palt(double index, bool isTransparent)
-        => Orch.GraphicsManager.Palt(Palette.ElementAt((int)index).Key, isTransparent ? 255 : 0);
+        => Orch.GraphicsManager.Palt(BasePalette.ElementAt((int)index).Key, isTransparent ? 255 : 0);
 
     public static void Palt(double index, double opacity)
-        => Orch.GraphicsManager.Palt(Palette.ElementAt((int)index).Key, (int)opacity);
+        => Orch.GraphicsManager.Palt(BasePalette.ElementAt((int)index).Key, (int)opacity);
 
     public static void Palt(F32 index, bool isTransparent)
-        => Orch.GraphicsManager.Palt(Palette.ElementAt(F32.FloorToInt(index)).Key, isTransparent ? 255 : 0);
+        => Orch.GraphicsManager.Palt(BasePalette.ElementAt(F32.FloorToInt(index)).Key, isTransparent ? 255 : 0);
 
     public static void Palt(F32 index, F32 opacity)
-        => Orch.GraphicsManager.Palt(Palette.ElementAt(F32.FloorToInt(index)).Key, F32.FloorToInt(opacity));
+        => Orch.GraphicsManager.Palt(BasePalette.ElementAt(F32.FloorToInt(index)).Key, F32.FloorToInt(opacity));
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Print
     /// </summary>
     public static void Print(string text, double x, double y, double color, Font? font = null)
-        => Orch.GraphicsManager.Print(text, (int)x, (int)y, Palette.ElementAt((int)color).Key, font ?? Fonts.P8SCII);
+        => Orch.GraphicsManager.Print(text, (int)x, (int)y, BasePalette.ElementAt((int)color).Key, font ?? Fonts.P8SCII);
 
     public static void Print(string text, double x, double y, Color color, Font? font = null)
         => Orch.GraphicsManager.Print(text, (int)x, (int)y, color, font ?? Fonts.P8SCII);
 
     public static void Print(string text, F32 x, F32 y, F32 color, Font? font = null)
         => Orch.GraphicsManager.Print(text, F32.FloorToInt(x), F32.FloorToInt(y),
-                Palette.ElementAt(F32.FloorToInt(color)).Key, font ?? Fonts.P8SCII);
+                BasePalette.ElementAt(F32.FloorToInt(color)).Key, font ?? Fonts.P8SCII);
 
     public static void Print(string text, F32 x, F32 y, Color color, Font? font = null)
         => Orch.GraphicsManager.Print(text, F32.FloorToInt(x), F32.FloorToInt(y), color, font ?? Fonts.P8SCII);
@@ -214,14 +214,14 @@ public static class Pico8
     /// https://pico-8.fandom.com/wiki/Pset
     /// </summary>
     public static void Pset(double x, double y, double color)
-        => Orch.GraphicsManager.Pset((int)x, (int)y, Palette.ElementAt((int)color).Key);
+        => Orch.GraphicsManager.Pset((int)x, (int)y, BasePalette.ElementAt((int)color).Key);
 
     public static void Pset(double x, double y, Color color)
         => Orch.GraphicsManager.Pset((int)x, (int)y, color);
 
     public static void Pset(F32 x, F32 y, F32 color)
         => Orch.GraphicsManager.Pset(F32.FloorToInt(x), F32.FloorToInt(y),
-                Palette.ElementAt(F32.FloorToInt(color)).Key);
+                BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Pset(F32 x, F32 y, Color color)
         => Orch.GraphicsManager.Pset(F32.FloorToInt(x), F32.FloorToInt(y), color);
@@ -231,14 +231,14 @@ public static class Pico8
     /// </summary>
     public static void Rect(double xLeft, double yTop, double xRight, double yBottom, double color)
         => Orch.GraphicsManager.Rect((int)xLeft, (int)yTop, (int)xRight, (int)yBottom,
-                Palette.ElementAt((int)color).Key);
+                BasePalette.ElementAt((int)color).Key);
 
     public static void Rect(double xLeft, double yTop, double xRight, double yBottom, Color color)
         => Orch.GraphicsManager.Rect((int)xLeft, (int)yTop, (int)xRight, (int)yBottom, color);
 
     public static void Rect(F32 xLeft, F32 yTop, F32 xRight, F32 yBottom, F32 color)
         => Orch.GraphicsManager.Rect(F32.FloorToInt(xLeft), F32.FloorToInt(yTop),
-                F32.FloorToInt(xRight), F32.FloorToInt(yBottom), Palette.ElementAt(F32.FloorToInt(color)).Key);
+                F32.FloorToInt(xRight), F32.FloorToInt(yBottom), BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Rect(F32 xLeft, F32 yTop, F32 xRight, F32 yBottom, Color color)
         => Orch.GraphicsManager.Rect(F32.FloorToInt(xLeft), F32.FloorToInt(yTop),
@@ -249,14 +249,14 @@ public static class Pico8
     /// </summary>
     public static void Rectfill(double xLeft, double yTop, double xRight, double yBottom, double color)
         => Orch.GraphicsManager.Rectfill((int)xLeft, (int)yTop, (int)xRight, (int)yBottom,
-                Palette.ElementAt((int)color).Key);
+                BasePalette.ElementAt((int)color).Key);
 
     public static void Rectfill(double xLeft, double yTop, double xRight, double yBottom, Color color)
         => Orch.GraphicsManager.Rectfill((int)xLeft, (int)yTop, (int)xRight, (int)yBottom, color);
 
     public static void Rectfill(F32 xLeft, F32 yTop, F32 xRight, F32 yBottom, F32 color)
         => Orch.GraphicsManager.Rectfill(F32.FloorToInt(xLeft), F32.FloorToInt(yTop),
-                F32.FloorToInt(xRight), F32.FloorToInt(yBottom), Palette.ElementAt(F32.FloorToInt(color)).Key);
+                F32.FloorToInt(xRight), F32.FloorToInt(yBottom), BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Rectfill(F32 xLeft, F32 yTop, F32 xRight, F32 yBottom, Color color)
         => Orch.GraphicsManager.Rectfill(F32.FloorToInt(xLeft), F32.FloorToInt(yTop),
@@ -267,7 +267,7 @@ public static class Pico8
     /// </summary>
     public static void Rrect(double xLeft, double yTop, double xRight, double yBottom, double radius, double color)
         => Orch.GraphicsManager.Rrect((int)xLeft, (int)yTop, (int)xRight, (int)yBottom,
-                (int)radius, Palette.ElementAt((int)color).Key);
+                (int)radius, BasePalette.ElementAt((int)color).Key);
 
     public static void Rrect(double xLeft, double yTop, double xRight, double yBottom, double radius, Color color)
         => Orch.GraphicsManager.Rrect((int)xLeft, (int)yTop, (int)xRight, (int)yBottom, (int)radius, color);
@@ -275,7 +275,7 @@ public static class Pico8
     public static void Rrect(F32 xLeft, F32 yTop, F32 xRight, F32 yBottom, F32 radius, F32 color)
         => Orch.GraphicsManager.Rrect(F32.FloorToInt(xLeft), F32.FloorToInt(yTop),
                 F32.FloorToInt(xRight), F32.FloorToInt(yBottom), F32.FloorToInt(radius),
-                Palette.ElementAt(F32.FloorToInt(color)).Key);
+                BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Rrect(F32 xLeft, F32 yTop, F32 xRight, F32 yBottom, F32 radius, Color color)
         => Orch.GraphicsManager.Rrect(F32.FloorToInt(xLeft), F32.FloorToInt(yTop),
@@ -286,7 +286,7 @@ public static class Pico8
     /// </summary>
     public static void Rrectfill(double xLeft, double yTop, double xRight, double yBottom, double radius, double color)
         => Orch.GraphicsManager.Rrectfill((int)xLeft, (int)yTop, (int)xRight, (int)yBottom,
-                (int)radius, Palette.ElementAt((int)color).Key);
+                (int)radius, BasePalette.ElementAt((int)color).Key);
 
     public static void Rrectfill(double xLeft, double yTop, double xRight, double yBottom, double radius, Color color)
         => Orch.GraphicsManager.Rrectfill((int)xLeft, (int)yTop, (int)xRight, (int)yBottom, (int)radius, color);
@@ -294,7 +294,7 @@ public static class Pico8
     public static void Rrectfill(F32 xLeft, F32 yTop, F32 xRight, F32 yBottom, F32 radius, F32 color)
         => Orch.GraphicsManager.Rrectfill(F32.FloorToInt(xLeft), F32.FloorToInt(yTop),
                 F32.FloorToInt(xRight), F32.FloorToInt(yBottom), F32.FloorToInt(radius),
-                Palette.ElementAt(F32.FloorToInt(color)).Key);
+                BasePalette.ElementAt(F32.FloorToInt(color)).Key);
 
     public static void Rrectfill(F32 xLeft, F32 yTop, F32 xRight, F32 yBottom, F32 radius, Color color)
         => Orch.GraphicsManager.Rrectfill(F32.FloorToInt(xLeft), F32.FloorToInt(yTop),
@@ -564,7 +564,7 @@ public static class Pico8
     /// </summary>
     public static void DrawTexture(string textureName, double x, double y, double color,
             double scaleX = 1, double scaleY = 1, bool flipX = false, bool flipY = false)
-        => Orch.GraphicsManager.DrawTexture(textureName, x, y, Palette.ElementAt((int)color).Key, scaleX, scaleY, flipX, flipY);
+        => Orch.GraphicsManager.DrawTexture(textureName, x, y, BasePalette.ElementAt((int)color).Key, scaleX, scaleY, flipX, flipY);
     
     public static void DrawTexture(string textureName, double x, double y, Color color,
             double scaleX = 1, double scaleY = 1, bool flipX = false, bool flipY = false)
@@ -572,7 +572,7 @@ public static class Pico8
     
     public static void DrawTexture(string textureName, double x, double y, Rectangle sourceRect,
             double color, double scaleX = 1, double scaleY = 1, bool flipX = false, bool flipY = false)
-        => Orch.GraphicsManager.DrawTexture(textureName, x, y, Palette.ElementAt((int)color).Key, scaleX, scaleY, flipX, flipY);
+        => Orch.GraphicsManager.DrawTexture(textureName, x, y, BasePalette.ElementAt((int)color).Key, scaleX, scaleY, flipX, flipY);
     
     public static void DrawTexture(string textureName, double x, double y, Rectangle sourceRect,
             Color color, double scaleX = 1, double scaleY = 1, bool flipX = false, bool flipY = false)
@@ -582,7 +582,7 @@ public static class Pico8
     /// DrawLine
     /// </summary>
     public static void DrawLine(Vector2 start, Vector2 end, double color, double thickness)
-        => Orch.GraphicsManager.DrawLine(start, end, Palette.ElementAt((int)color).Key, thickness);
+        => Orch.GraphicsManager.DrawLine(start, end, BasePalette.ElementAt((int)color).Key, thickness);
     
     public static void DrawLine(Vector2 start, Vector2 end, Color color, double thickness)
         => Orch.GraphicsManager.DrawLine(start, end, color, thickness);
@@ -591,7 +591,7 @@ public static class Pico8
     /// DrawCirc
     /// </summary>
     public static void DrawCirc(Vector2 center, double radius, double color, double thickness, int segments = 32)
-        => Orch.GraphicsManager.DrawCirc(center, radius, Palette.ElementAt((int)color).Key, thickness, segments);
+        => Orch.GraphicsManager.DrawCirc(center, radius, BasePalette.ElementAt((int)color).Key, thickness, segments);
     
     public static void DrawCirc(Vector2 center, double radius, Color color, double thickness, int segments = 32)
         => Orch.GraphicsManager.DrawCirc(center, radius, color, thickness, segments);
@@ -600,14 +600,14 @@ public static class Pico8
     /// DrawRect
     /// </summary>
     public static void DrawRect(Vector2 topLeft, double width, double height, double color, double thickness)
-        => Orch.GraphicsManager.DrawRect(topLeft, width, height, Palette.ElementAt((int)color).Key, thickness);
+        => Orch.GraphicsManager.DrawRect(topLeft, width, height, BasePalette.ElementAt((int)color).Key, thickness);
     
     public static void DrawRect(Vector2 topLeft, double width, double height, Color color, double thickness)
         => Orch.GraphicsManager.DrawRect(topLeft, width, height, color, thickness);
         
     public static void DrawRect(Rectangle rect, double color, double thickness)
         => Orch.GraphicsManager.DrawRect(new(rect.X, rect.Y), rect.Width, rect.Height,
-                Palette.ElementAt((int)color).Key, thickness);
+                BasePalette.ElementAt((int)color).Key, thickness);
     
     public static void DrawRect(Rectangle rect, Color color, double thickness)
         => Orch.GraphicsManager.DrawRect(new(rect.X, rect.Y), rect.Width, rect.Height, color, thickness);

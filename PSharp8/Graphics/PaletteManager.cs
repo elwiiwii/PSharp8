@@ -53,7 +53,7 @@ public class PaletteManager
     [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_paletteMap))]
     public void ResetPalette()
     {
-        _paletteMap = new(Pico8.Palette);
+        _paletteMap = new(Pico8.BasePalette);
         PaletteVersion++;
     }
 

@@ -399,8 +399,8 @@ public class SpriteMapDataTests(GraphicsFixture fixture) : GraphicsTestBase(fixt
         data.SpritesheetVersion.Should().BeGreaterThan(spritesheetVBefore);
         // Pixel 0 (even offset): 3/16=0  → palette[0]
         // Pixel 1 (odd offset):  3%16=3  → palette[3]
-        Color pal0 = Pico8.Palette.ElementAt(0).Key;
-        Color pal3 = Pico8.Palette.ElementAt(3).Key;
+        Color pal0 = Pico8.BasePalette.ElementAt(0).Key;
+        Color pal3 = Pico8.BasePalette.ElementAt(3).Key;
         data.GetSpritePixel(0, 0).Should().Be(pal0);
         data.GetSpritePixel(1, 0).Should().Be(pal3);
     }
@@ -438,8 +438,8 @@ public class SpriteMapDataTests(GraphicsFixture fixture) : GraphicsTestBase(fixt
             @base: 16);
 
         data.SpritesheetVersion.Should().BeGreaterThan(vBefore);
-        Color pal0 = Pico8.Palette.ElementAt(0).Key;
-        Color pal3 = Pico8.Palette.ElementAt(3).Key;
+        Color pal0 = Pico8.BasePalette.ElementAt(0).Key;
+        Color pal3 = Pico8.BasePalette.ElementAt(3).Key;
         data.GetSpritePixel(0, 64).Should().Be(pal0);
         data.GetSpritePixel(1, 64).Should().Be(pal3);
     }

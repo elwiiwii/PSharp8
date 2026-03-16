@@ -74,6 +74,7 @@ public abstract class GraphicsTestBase : IDisposable
         using var spriteBatch = new SpriteBatch(_gd);
         var gm = new GraphicsManager(
             spriteBatch,
+            new DrawState(),
             () => res,
             _fixture.GraphicsDeviceManager,
             _gd,
