@@ -4,27 +4,21 @@ public static class Fonts
 {
     public static Font P8SCII => new(
         characters: new(){
-            { (6, 4), "▮■□⁙⁘‖◀▶「」¥•、。゛゜ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~○" },
-            { (6, 8), "█▒?⬇️░✽●♥☉웃⌂⬅️?♪🅾️◆…➡️★⧗⬆️ˇ∧❎▤▥あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんっゃゅょアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンッャュョ◜◝" },
+            { "▮■□⁙⁘‖◀▶「」¥•、。゛゜ !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~○", (4, 6) },
+            { "█▒?⬇️░✽●♥☉웃⌂⬅️?♪🅾️◆…➡️★⧗⬆️ˇ∧❎▤▥あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんっゃゅょアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンッャュョ◜◝", (8, 6) },
         },
         textureName: "P8SCII");
 
     public static Font BigFont => new(
-        characters: new(){{ (12, 8), "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_- " }},
+        characters: new(){{ "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_- ", (8, 12) }},
         textureName: "BigFont");
 }
 
-public class Font
+public class Font(Dictionary<string, (int Width, int Height)> characters, string textureName)
 {
-    private readonly Dictionary<(int Width, int Height), string> _characters;
-    private readonly string _textureName;
+    private readonly Dictionary<string, (int Width, int Height)> _characters = characters;
+    private readonly string _textureName = textureName;
 
-    public Font(Dictionary<(int Width, int Height), string> characters, string textureName)
-    {
-        _characters = characters;
-        _textureName = textureName;
-    }
-
-    public Dictionary<(int Width, int Height), string> Characters => _characters;
+    public Dictionary<string, (int Width, int Height)> Characters => _characters;
     public string TextureName => _textureName;
 }

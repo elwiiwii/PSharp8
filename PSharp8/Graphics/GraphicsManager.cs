@@ -6,7 +6,7 @@ namespace PSharp8.Graphics;
 public class GraphicsManager
 {
     private readonly SpriteBatch _batch;
-    private readonly DrawState _drawState;
+    private (int x, int y) _camera = (0, 0);
     private readonly Func<(int W, int H)> _getSceneResolution;
     private readonly GraphicsDeviceManager _graphics;
     private readonly GraphicsDevice _graphicsDevice;
@@ -18,7 +18,6 @@ public class GraphicsManager
 
     public GraphicsManager(
         SpriteBatch batch,
-        DrawState drawState,
         Func<(int W, int H)> getSceneResolution,
         GraphicsDeviceManager graphics,
         GraphicsDevice graphicsDevice,
@@ -29,7 +28,6 @@ public class GraphicsManager
         GameWindow window)
     {
         _batch = batch ?? throw new ArgumentNullException(nameof(batch));
-        _drawState = drawState ?? throw new ArgumentNullException(nameof(drawState));
         _getSceneResolution = getSceneResolution ?? throw new ArgumentNullException(nameof(getSceneResolution));
         _graphics = graphics ?? throw new ArgumentNullException(nameof(graphics));
         _graphicsDevice = graphicsDevice ?? throw new ArgumentNullException(nameof(graphicsDevice));
@@ -49,8 +47,8 @@ public class GraphicsManager
     {
         if (radius < 0) return;
 
-        centerX -= _drawState.Camera.x;
-        centerY -= _drawState.Camera.y;
+        centerX -= _camera.x;
+        centerY -= _camera.y;
 
         IterateMidpointArc(radius, (dx, dy) =>
         {
@@ -72,8 +70,8 @@ public class GraphicsManager
     {
         if (radius < 0) return;
 
-        centerX -= _drawState.Camera.x;
-        centerY -= _drawState.Camera.y;
+        centerX -= _camera.x;
+        centerY -= _camera.y;
 
         IterateMidpointArc(radius, (dx, dy) =>
         {
@@ -97,10 +95,10 @@ public class GraphicsManager
     /// </summary>
     public void Line(int startX, int startY, int endX, int endY, Color color)
     {
-        startX -= _drawState.Camera.x;
-        startY -= _drawState.Camera.y;
-        endX -= _drawState.Camera.x;
-        endY -= _drawState.Camera.y;
+        startX -= _camera.x;
+        startY -= _camera.y;
+        endX -= _camera.x;
+        endY -= _camera.y;
 
         bool horiz = Math.Abs(endX - startX) >= Math.Abs(endY - startY);
         int dx = startX <= endX ? 1 : -1;
@@ -134,8 +132,8 @@ public class GraphicsManager
     /// </summary>
     public void Pset(int x, int y, Color color)
     {
-        x -= _drawState.Camera.x;
-        y -= _drawState.Camera.y;
+        x -= _camera.x;
+        y -= _camera.y;
 
         DrawScaledPixel(x, y, color, 1, 1);
     }
@@ -147,8 +145,8 @@ public class GraphicsManager
     {
         int width = xRight - xLeft + 1;
         int height = yBottom - yTop + 1;
-        xLeft -= _drawState.Camera.x;
-        yTop -= _drawState.Camera.y;
+        xLeft -= _camera.x;
+        yTop -= _camera.y;
 
         DrawScaledPixel(xLeft, yTop, color, width, 1);
         DrawScaledPixel(xLeft, yTop + height - 1, color, width, 1);
@@ -163,8 +161,8 @@ public class GraphicsManager
     {
         int width = xRight - xLeft + 1;
         int height = yBottom - yTop + 1;
-        xLeft -= _drawState.Camera.x;
-        yTop -= _drawState.Camera.y;
+        xLeft -= _camera.x;
+        yTop -= _camera.y;
 
         DrawScaledPixel(xLeft, yTop, color, width, height);
     }
@@ -176,8 +174,8 @@ public class GraphicsManager
     {
         if (width <= 0 || height <= 0) return;
 
-        x -= _drawState.Camera.x;
-        y -= _drawState.Camera.y;
+        x -= _camera.x;
+        y -= _camera.y;
 
         int cornerRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
 
@@ -221,8 +219,8 @@ public class GraphicsManager
     {
         if (width <= 0 || height <= 0) return;
 
-        x -= _drawState.Camera.x;
-        y -= _drawState.Camera.y;
+        x -= _camera.x;
+        y -= _camera.y;
 
         int cornerRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
 
@@ -297,7 +295,7 @@ public class GraphicsManager
     /// </summary>
     public void Camera(int x = 0, int y = 0)
     {
-        _drawState.SetCamera(x, y);
+        _camera = (x, y);
     }
 
     #endregion
@@ -317,72 +315,46 @@ public class GraphicsManager
     /// </summary>
     public void Print(string text, int x, int y, Color color, Font font)
     {
-        x -= _drawState.Camera.x;
-        y -= _drawState.Camera.y;
+        x -= _camera.x;
+        y -= _camera.y;
 
-        _textureDictionary.TryGetValue(font.TextureName, out Texture2D? fontTexture);
+        if (!_textureDictionary.TryGetValue(font.TextureName, out var fontTexture))
+            return;
 
-        _drawState.BeginPrint(text, x, y, font);
+        int cellW = font.Characters.Max(pair => pair.Value.Width);
+        int cellH = font.Characters.Max(pair => pair.Value.Height);
 
-        try
+        if (cellW == 0 || fontTexture.Width % cellW != 0)
+            throw new InvalidOperationException(
+                $"Font texture '{font.TextureName}' width {fontTexture.Width} is not a multiple of cell width {cellW}.");
+
+        int cols = fontTexture.Width / cellW;
+        int cursorX = x;
+
+        foreach (char c in text)
         {
-            for (int index = 0; index < text.Length; index++)
+            int tierYStart = 0;
+
+            foreach (var (chars, size) in font.Characters)
             {
-                char c = text[index];
-                //_drawState.PrintSession.SetCurrentIndex(index);
-
-                //if (_drawState.TryHandlePrintControlCode(c))
-                //    continue;
-
-                int charIndex = -1;
-                int charWidth = 0;
-                int charHeight = 0;
-                int srcY = 0;
-
-                foreach (var (size, chars) in font.Characters)
+                int charIndex = chars.IndexOf(c);
+                if (charIndex >= 0)
                 {
-                    int idx = chars.IndexOf(c);
-                    if (idx >= 0)
-                    {
-                        charIndex = idx;
-                        charWidth = size.Width;
-                        charHeight = size.Height;
-                        break;
-                    }
-                    srcY += size.Height;
-                }
+                    int srcX = (charIndex % cols) * cellW;
+                    int srcY = tierYStart + (charIndex / cols) * cellH;
 
-                if (charIndex < 0)
-                {
-                    //_drawState.PrintSession.AdvanceCursorX(font.Characters.First().Key.Width);
-                    //_drawState.SetCursor(_drawState.PrintSession.Cursor.x, _drawState.PrintSession.Cursor.y);
-                    continue;
-                }
+                    _batch.Draw(
+                        fontTexture,
+                        new Rectangle(cursorX, y, size.Width, size.Height),
+                        new Rectangle(srcX, srcY, size.Width, size.Height),
+                        color);
 
-                if (fontTexture is not null)
-                {
-                    int charsPerRow = Math.Max(1, fontTexture.Width / charWidth);
-                    int srcX = (charIndex % charsPerRow) * charWidth;
-                    srcY += (charIndex / charsPerRow) * charHeight;
-
-                    //_batch.Draw(fontTexture,
-                    //    new Rectangle((int)_drawState.PrintSession.Cursor.x, (int)_drawState.PrintSession.Cursor.y, charWidth, charHeight),
-                    //    new Rectangle(srcX, srcY, charWidth, charHeight),
-                    //    color);
+                    cursorX += size.Width;
+                    break;
                 }
-                else
-                {
-                    //DrawScaledPixel(_drawState.PrintSession.Cursor.x, _drawState.PrintSession.Cursor.y, color, charWidth, charHeight);
-                }
-
-                //_drawState.PrintSession.AdvanceCursorX(charWidth);
-                //_drawState.PrintSession.SetPreviousCharacterHeight(charHeight);
-                //_drawState.SetCursor(_drawState.PrintSession.Cursor.x, _drawState.PrintSession.Cursor.y);
+                tierYStart += (int)Math.Ceiling((double)chars.Length / cols) * cellH;
             }
-        }
-        finally
-        {
-            _drawState.EndPrint();
+            // Unknown chars: no cursor advance (Pico-8 behaviour)
         }
     }
 
@@ -391,14 +363,7 @@ public class GraphicsManager
     /// </summary>
     public void Spr(int index, int x, int y, int width = 1, int height = 1, bool flipX = false, bool flipY = false)
     {
-        if (_spriteTextureManager is null) return;
-        x -= _drawState.Camera.x;
-        y -= _drawState.Camera.y;
-        Texture2D tex = _spriteTextureManager.GetSpriteTexture(index, width, height);
-        Rectangle dst = new(x, y, width * 8, height * 8);
-        SpriteEffects effects = (flipX ? SpriteEffects.FlipHorizontally : SpriteEffects.None)
-                              | (flipY ? SpriteEffects.FlipVertically : SpriteEffects.None);
-        _batch.Draw(tex, dst, null, Color.White, 0f, Vector2.Zero, effects, 0f);
+        
     }
 
     /// <summary>

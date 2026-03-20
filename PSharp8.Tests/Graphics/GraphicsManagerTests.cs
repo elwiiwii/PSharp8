@@ -18,7 +18,6 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
     {
         var act = () => new GraphicsManager(
             null!,
-            new DrawState(),
             () => (128, 128),
             _fixture.GraphicsDeviceManager,
             _gd,
@@ -32,31 +31,11 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
     }
 
     [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenDrawStateIsNull()
-    {
-        using var spriteBatch = new SpriteBatch(_gd);
-        var act = () => new GraphicsManager(
-            spriteBatch,
-            null!,
-            () => (128, 128),
-            _fixture.GraphicsDeviceManager,
-            _gd,
-            new PaletteManager(),
-            MakeSolid(1, 1, White),
-            BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
-            _fixture.Window);
-
-        act.Should().Throw<ArgumentNullException>().WithParameterName("drawState");
-    }
-
-    [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenGetSceneResolutionIsNull()
     {
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             null!,
             _fixture.GraphicsDeviceManager,
             _gd,
@@ -75,7 +54,6 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             () => (128, 128),
             null!,
             _gd,
@@ -94,7 +72,6 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             () => (128, 128),
             _fixture.GraphicsDeviceManager,
             null!,
@@ -113,7 +90,6 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             () => (128, 128),
             _fixture.GraphicsDeviceManager,
             _gd,
@@ -132,7 +108,6 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             () => (128, 128),
             _fixture.GraphicsDeviceManager,
             _gd,
@@ -151,7 +126,6 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             () => (128, 128),
             _fixture.GraphicsDeviceManager,
             _gd,
@@ -170,7 +144,6 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             () => (128, 128),
             _fixture.GraphicsDeviceManager,
             _gd,
@@ -189,7 +162,6 @@ public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fi
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             () => (128, 128),
             _fixture.GraphicsDeviceManager,
             _gd,

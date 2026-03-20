@@ -61,6 +61,72 @@ public abstract class GraphicsTestBase : IDisposable
     }
 
     /// <summary>
+    /// Like <see cref="RenderToTarget"/> but also registers a solid-white texture
+    /// for <paramref name="font"/> in the textureDictionary, sized using the unified
+    /// cell grid model (cellW × cellH cells, one row per tier).
+    /// </summary>
+    protected Color[] PrintToTarget(int width, int height, Color clearColor, Font font,
+        Action<GraphicsManager> draw, (int W, int H)? cellResolution = null)
+    {
+        int cellW = font.Characters.Max(pair => pair.Value.Width);
+        int cellH = font.Characters.Max(pair => pair.Value.Height);
+        int maxCharsPerTier = font.Characters.Max(pair => pair.Key.Length);
+        var fontTex = MakeSolid(Math.Max(1, maxCharsPerTier * cellW), Math.Max(1, font.Characters.Count * cellH), White);
+        return PrintToTargetCore(width, height, clearColor, fontTex, font.TextureName, draw, cellResolution);
+    }
+
+    /// <summary>
+    /// Like <see cref="PrintToTarget(int,int,Color,Font,Action{GraphicsManager},(int,int)?)"/> but
+    /// accepts an explicit font texture, allowing tests to supply non-uniform or intentionally
+    /// wrong-sized textures.
+    /// </summary>
+    protected Color[] PrintToTarget(int width, int height, Color clearColor, Font font, Texture2D fontTexture,
+        Action<GraphicsManager> draw, (int W, int H)? cellResolution = null)
+        => PrintToTargetCore(width, height, clearColor, fontTexture, font.TextureName, draw, cellResolution);
+
+    private Color[] PrintToTargetCore(int width, int height, Color clearColor, Texture2D fontTex, string texName,
+        Action<GraphicsManager> draw, (int W, int H)? cellResolution = null)
+    {
+        (int W, int H) res = cellResolution ?? (width, height);
+        using var target = new RenderTarget2D(_gd, width, height);
+        var pixel = MakeSolid(1, 1, White);
+        using var spriteBatch = new SpriteBatch(_gd);
+        var texDict = new Dictionary<string, Texture2D> { { texName, fontTex } };
+        var gm = new GraphicsManager(
+            spriteBatch,
+            () => res,
+            _fixture.GraphicsDeviceManager,
+            _gd,
+            new PaletteManager(),
+            pixel,
+            BuildSpriteTextureManager(),
+            texDict,
+            _fixture.Window);
+
+        _gd.SetRenderTarget(target);
+        _gd.Clear(clearColor);
+        spriteBatch.Begin();
+        try
+        {
+            draw(gm);
+        }
+        catch
+        {
+            // End the batch and reset the render target before re-throwing so
+            // subsequent tests start from a clean graphics-device state.
+            spriteBatch.End();
+            _gd.SetRenderTarget(null);
+            throw;
+        }
+        spriteBatch.End();
+        _gd.SetRenderTarget(null);
+
+        var pixels = new Color[width * height];
+        target.GetData(pixels);
+        return pixels;
+    }
+
+    /// <summary>
     /// Renders into a <paramref name="width"/> × <paramref name="height"/> render
     /// target, invokes <paramref name="draw"/> inside a SpriteBatch Begin/End
     /// block, then returns the full pixel array for assertion.
@@ -74,7 +140,6 @@ public abstract class GraphicsTestBase : IDisposable
         using var spriteBatch = new SpriteBatch(_gd);
         var gm = new GraphicsManager(
             spriteBatch,
-            new DrawState(),
             () => res,
             _fixture.GraphicsDeviceManager,
             _gd,
