@@ -354,7 +354,7 @@ public class GraphicsManager
                 }
                 tierYStart += (int)Math.Ceiling((double)chars.Length / cols) * cellH;
             }
-            // Unknown chars: no cursor advance (Pico-8 behaviour)
+            // Unknown chars: do nothing
         }
     }
 
@@ -363,7 +363,25 @@ public class GraphicsManager
     /// </summary>
     public void Spr(int index, int x, int y, int width = 1, int height = 1, bool flipX = false, bool flipY = false)
     {
-        
+        x -= _camera.x;
+        y -= _camera.y;
+
+        var (scaleX, scaleY) = ComputeViewportScales();
+        Texture2D texture = _spriteTextureManager.GetSpriteTexture(index, width, height);
+
+        SpriteEffects effects = SpriteEffects.None;
+        if (flipX) effects |= SpriteEffects.FlipHorizontally;
+        if (flipY) effects |= SpriteEffects.FlipVertically;
+
+        _batch.Draw(
+            texture,
+            new Rectangle(x * scaleX, y * scaleY, texture.Width * scaleX, texture.Height * scaleY),
+            null,
+            Color.White,
+            0f,
+            Vector2.Zero,
+            effects,
+            0f);
     }
 
     /// <summary>

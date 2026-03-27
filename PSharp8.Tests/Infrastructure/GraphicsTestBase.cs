@@ -130,8 +130,12 @@ public abstract class GraphicsTestBase : IDisposable
     /// Renders into a <paramref name="width"/> × <paramref name="height"/> render
     /// target, invokes <paramref name="draw"/> inside a SpriteBatch Begin/End
     /// block, then returns the full pixel array for assertion.
+    /// When <paramref name="pm"/> or <paramref name="stm"/> are supplied they are
+    /// shared with the <see cref="GraphicsManager"/>, allowing tests to control
+    /// palette and sprite state.
     /// </summary>
     protected Color[] RenderToTarget(int width, int height, Color clearColor, Action<GraphicsManager> draw,
+        PaletteManager? pm = null, SpriteTextureManager? stm = null,
         (int W, int H)? cellResolution = null)
     {
         (int W, int H) res = cellResolution ?? (width, height);
@@ -143,9 +147,9 @@ public abstract class GraphicsTestBase : IDisposable
             () => res,
             _fixture.GraphicsDeviceManager,
             _gd,
-            new PaletteManager(),
+            pm ?? new PaletteManager(),
             pixel,
-            BuildSpriteTextureManager(),
+            stm ?? BuildSpriteTextureManager(),
             new Dictionary<string, Texture2D>(),
             _fixture.Window);
 
