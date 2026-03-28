@@ -5,6 +5,7 @@ namespace PSharp8.Graphics;
 
 public class SpriteTextureManager : IDisposable
 {
+    private const int SPRITE_SIZE = 8;
     private readonly GraphicsDevice _graphicsDevice;
     private readonly PaletteManager _paletteManager;
     private readonly SpriteMapData _data;
@@ -47,8 +48,8 @@ public class SpriteTextureManager : IDisposable
     public Texture2D GetMapRegionTexture(int mapX, int mapY, int mapW, int mapH, int flags = 0)
     {
         var key = (mapX, mapY, mapW, mapH, flags);
-        int texW = mapW * 8;
-        int texH = mapH * 8;
+        int texW = mapW * SPRITE_SIZE;
+        int texH = mapH * SPRITE_SIZE;
         int spritesPerRow = _data.SpritesPerRow;
         int spriteSheetWidth = _data.SpriteSheetWidth;
         Color[] spritesheetData = _data.SpritesheetData;
@@ -68,13 +69,13 @@ public class SpriteTextureManager : IDisposable
             {
                 int spriteIndex = _data.GetMapTile(mapX + cx, mapY + cy);
                 bool drawSprite = flags == 0 || (_data.GetFlag(spriteIndex) & flags) != 0;
-                int spriteOriginX = (spriteIndex % spritesPerRow) * 8;
-                int spriteOriginY = (spriteIndex / spritesPerRow) * 8;
-                for (int py = 0; py < 8; py++)
+                int spriteOriginX = (spriteIndex % spritesPerRow) * SPRITE_SIZE;
+                int spriteOriginY = (spriteIndex / spritesPerRow) * SPRITE_SIZE;
+                for (int py = 0; py < SPRITE_SIZE; py++)
                 {
-                    for (int px = 0; px < 8; px++)
+                    for (int px = 0; px < SPRITE_SIZE; px++)
                     {
-                        int destIdx = (cx * 8 + px) + (cy * 8 + py) * texW;
+                        int destIdx = (cx * SPRITE_SIZE + px) + (cy * SPRITE_SIZE + py) * texW;
                         if (!drawSprite)
                         {
                             pixels[destIdx] = Color.Transparent;
@@ -105,20 +106,44 @@ public class SpriteTextureManager : IDisposable
 
     public Texture2D GetSpriteTexture(int index, int w = 1, int h = 1)
     {
-        int texW = w * 8;
-        int texH = h * 8;
+        int texW = w * SPRITE_SIZE;
+        int texH = h * SPRITE_SIZE;
         int spritesPerRow = _data.SpritesPerRow;
         int sheetWidth = _data.SpriteSheetWidth;
         Color[] sheet = _data.SpritesheetData;
-        int originX = (index % spritesPerRow) * 8;
-        int originY = (index / spritesPerRow) * 8;
+        int originX = (index % spritesPerRow) * SPRITE_SIZE;
+        int originY = (index / spritesPerRow) * SPRITE_SIZE;
 
         Color[] pixels = new Color[texW * texH];
         for (int row = 0; row < texH; row++)
             for (int col = 0; col < texW; col++)
                 pixels[col + row * texW] = sheet[(originX + col) + (originY + row) * sheetWidth];
 
-        var key = new SpriteSnapshot(pixels, w, h, _paletteManager.PaletteMap);
+        return GetOrCreateCachedTexture(pixels, texW, texH);
+    }
+
+    public Texture2D GetScaledRegionTexture(int sx, int sy, int sw, int sh, int dw, int dh)
+    {
+        int sheetWidth = _data.SpriteSheetWidth;
+        Color[] sheet = _data.SpritesheetData;
+
+        Color[] scaled = new Color[dw * dh];
+        for (int dy = 0; dy < dh; dy++)
+        {
+            int srcY = dy * sh / dh;
+            for (int dx = 0; dx < dw; dx++)
+            {
+                int srcX = dx * sw / dw;
+                scaled[dx + dy * dw] = sheet[(sx + srcX) + (sy + srcY) * sheetWidth];
+            }
+        }
+
+        return GetOrCreateCachedTexture(scaled, dw, dh);
+    }
+
+    private Texture2D GetOrCreateCachedTexture(Color[] pixels, int width, int height)
+    {
+        var key = new SpriteSnapshot(pixels, width, height, _paletteManager.PaletteMap);
 
         Texture2D? cached = _spriteCache.Get(key);
         if (cached is not null)
@@ -129,7 +154,7 @@ public class SpriteTextureManager : IDisposable
         for (int i = 0; i < pixels.Length; i++)
             applied[i] = pm.TryGetValue(pixels[i], out Color mapped) ? mapped : pixels[i];
 
-        Texture2D tex = new Texture2D(_graphicsDevice, texW, texH);
+        Texture2D tex = new Texture2D(_graphicsDevice, width, height);
         tex.SetData(applied);
         _spriteCache.Put(key, tex);
         return tex;

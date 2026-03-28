@@ -363,11 +363,30 @@ public class GraphicsManager
     /// </summary>
     public void Spr(int index, int x, int y, int width = 1, int height = 1, bool flipX = false, bool flipY = false)
     {
+        Texture2D texture = _spriteTextureManager.GetSpriteTexture(index, width, height);
+        DrawSpriteTexture(texture, x, y, flipX, flipY);
+    }
+
+    /// <summary>
+    /// https://pico-8.fandom.com/wiki/Sspr
+    /// </summary>
+    public void Sspr(int sourceX, int sourceY, int sourceWidth, int sourceHeight, int destX, int destY,
+            int destWidth = -1, int destHeight = -1, bool flipX = false, bool flipY = false)
+    {
+        if (destWidth < 0) destWidth = sourceWidth;
+        if (destHeight < 0) destHeight = sourceHeight;
+
+        Texture2D texture = _spriteTextureManager.GetScaledRegionTexture(
+            sourceX, sourceY, sourceWidth, sourceHeight, destWidth, destHeight);
+        DrawSpriteTexture(texture, destX, destY, flipX, flipY);
+    }
+
+    private void DrawSpriteTexture(Texture2D texture, int x, int y, bool flipX, bool flipY)
+    {
         x -= _camera.x;
         y -= _camera.y;
 
         var (scaleX, scaleY) = ComputeViewportScales();
-        Texture2D texture = _spriteTextureManager.GetSpriteTexture(index, width, height);
 
         SpriteEffects effects = SpriteEffects.None;
         if (flipX) effects |= SpriteEffects.FlipHorizontally;
@@ -382,15 +401,6 @@ public class GraphicsManager
             Vector2.Zero,
             effects,
             0f);
-    }
-
-    /// <summary>
-    /// https://pico-8.fandom.com/wiki/Sspr
-    /// </summary>
-    public void Sspr(int sourceX, int sourceY, int sourceWidth, int sourceHeight, int destX, int destY,
-            int destWidth, int destHeight, bool flipX = false, bool flipY = false)
-    {
-        
     }
 
     #endregion

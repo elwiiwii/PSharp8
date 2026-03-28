@@ -22,6 +22,7 @@ public abstract class GraphicsTestBase : IDisposable
     protected readonly GraphicsFixture _fixture;
     protected readonly GraphicsDevice _gd;
     protected readonly List<Texture2D> _ownedTextures = new();
+    protected readonly List<IDisposable> _ownedDisposables = new();
 
     protected GraphicsTestBase(GraphicsFixture fixture)
     {
@@ -31,6 +32,8 @@ public abstract class GraphicsTestBase : IDisposable
 
     public void Dispose()
     {
+        foreach (var d in _ownedDisposables)
+            d.Dispose();
         foreach (var t in _ownedTextures)
             if (!t.IsDisposed) t.Dispose();
     }
@@ -57,7 +60,9 @@ public abstract class GraphicsTestBase : IDisposable
         var pm    = new PaletteManager();
         var smd   = BuildSpriteMapData();
         var cache = new LruCache<SpriteSnapshot, Texture2D>(300);
-        return new SpriteTextureManager(_gd, pm, smd, cache);
+        var stm   = new SpriteTextureManager(_gd, pm, smd, cache);
+        _ownedDisposables.Add(stm);
+        return stm;
     }
 
     /// <summary>

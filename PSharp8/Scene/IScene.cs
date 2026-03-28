@@ -7,6 +7,7 @@ public interface IScene
     (int w, int h) Resolution { get; }
     void Init();
     void Update();
+    void UpdateWhilePaused();
     void Draw();
     string? SpritesPath { get; }
     string? FlagData { get; }

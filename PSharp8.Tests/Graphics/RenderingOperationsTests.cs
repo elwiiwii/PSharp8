@@ -44,8 +44,14 @@ public class RenderingOperationsTests(GraphicsFixture fixture) : GraphicsTestBas
         var pm = new PaletteManager();
         var cache = new LruCache<SpriteSnapshot, Texture2D>(staleTtlFrames);
         var stm = new SpriteTextureManager(_gd, pm, smd, cache);
+        _ownedDisposables.Add(stm);
         return (stm, pm, cache);
     }
+
+    // -------------------------------------------------------------------------
+    #endregion
+    #region Map
+    // -------------------------------------------------------------------------
 
     // -------------------------------------------------------------------------
     #endregion
@@ -414,6 +420,445 @@ public class RenderingOperationsTests(GraphicsFixture fixture) : GraphicsTestBas
         cache.Count.Should().Be(1); // sanity: cached after Spr
 
         // Tick past the TTL without re-accessing
+        for (int i = 0; i < 4; i++)
+            stm.Tick();
+
+        cache.Count.Should().Be(0);
+    }
+
+    // -------------------------------------------------------------------------
+    #endregion
+    #region Sspr
+    // -------------------------------------------------------------------------
+
+    // --- Core Rendering (no scaling) ---
+
+    [Fact]
+    public void Sspr_RendersSourceRegion_AtDestPosition()
+    {
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 16, sheetH: 16, fillColor: DarkBlue);
+        var pixels = RenderToTarget(20, 20, Black, gm =>
+            gm.Sspr(0, 0, 8, 8, 5, 3, 8, 8), pm: pm, stm: stm);
+
+        pixels[3 * 20 + 5].Should().Be(DarkBlue);  // dest at (5, 3)
+        pixels[3 * 20 + 4].Should().Be(Black);      // left of dest
+    }
+
+    [Fact]
+    public void Sspr_SelectsCorrectSubregion_FromSpriteSheet()
+    {
+        // 16×16 sheet: top-left 8×8 = DarkBlue, bottom-right 8×8 = Red
+        var customPixels = new Color[16 * 16];
+        Array.Fill(customPixels, DarkBlue);
+        for (int row = 8; row < 16; row++)
+            for (int col = 8; col < 16; col++)
+                customPixels[row * 16 + col] = Red;
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 16, sheetH: 16, customPixels: customPixels);
+        var pixels = RenderToTarget(8, 8, Black, gm =>
+            gm.Sspr(8, 8, 8, 8, 0, 0, 8, 8), pm: pm, stm: stm);
+
+        pixels[0].Should().Be(Red);
+    }
+
+    [Fact]
+    public void Sspr_AppliesPaletteMapping()
+    {
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
+        var pixels = RenderToTarget(8, 8, Black, gm =>
+        {
+            gm.Pal(DarkBlue, Red);
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8);
+        }, pm: pm, stm: stm);
+
+        pixels[0].Should().Be(Red);
+    }
+
+    [Fact]
+    public void Sspr_RendersBlackPixelsAsTransparent_ByDefaultPalette()
+    {
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: Black);
+        var pixels = RenderToTarget(8, 8, DarkGreen, gm =>
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8), pm: pm, stm: stm);
+
+        pixels[0].Should().Be(DarkGreen);
+    }
+
+    [Fact]
+    public void Sspr_AdjustsPosition_ByCameraOffset()
+    {
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
+        var pixels = RenderToTarget(30, 8, Black, gm =>
+        {
+            gm.Camera(10, 0);
+            gm.Sspr(0, 0, 8, 8, 10, 0, 8, 8);
+        }, pm: pm, stm: stm);
+
+        pixels[0].Should().Be(DarkBlue);   // camera-corrected to x=0
+        pixels[10].Should().Be(Black);     // uncorrected position empty
+    }
+
+    [Fact]
+    public void Sspr_FlipsHorizontally_WhenFlipXIsTrue()
+    {
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, DarkBlue);
+        customPixels[0] = Red;  // Red at (0, 0)
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(8, 8, Black, gm =>
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8, flipX: true), pm: pm, stm: stm);
+
+        pixels[7].Should().Be(Red);       // flipped: x=0 → x=7
+        pixels[0].Should().Be(DarkBlue);
+    }
+
+    [Fact]
+    public void Sspr_FlipsVertically_WhenFlipYIsTrue()
+    {
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, DarkBlue);
+        customPixels[0] = Red;  // Red at (0, 0)
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(8, 8, Black, gm =>
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8, flipY: true), pm: pm, stm: stm);
+
+        pixels[7 * 8].Should().Be(Red);   // flipped: y=0 → y=7
+        pixels[0].Should().Be(DarkBlue);
+    }
+
+    [Fact]
+    public void Sspr_FlipsBothAxes_WhenBothFlipFlagsTrue()
+    {
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, DarkBlue);
+        customPixels[0] = Red;  // Red at (0, 0)
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(8, 8, Black, gm =>
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8, flipX: true, flipY: true), pm: pm, stm: stm);
+
+        pixels[7 * 8 + 7].Should().Be(Red);  // Red moves to (7, 7)
+        pixels[0].Should().Be(DarkBlue);
+    }
+
+    [Fact]
+    public void Sspr_ScalesOutput_WithViewportCellSize()
+    {
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
+        // Target 16×16 with cellResolution 8×8 → 2× viewport scale
+        var pixels = RenderToTarget(16, 16, Black, gm =>
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8), pm: pm, stm: stm,
+            cellResolution: (8, 8));
+
+        pixels[0].Should().Be(DarkBlue);
+        pixels[15 * 16 + 15].Should().Be(DarkBlue);  // fills entire 16×16
+    }
+
+    [Fact]
+    public void Sspr_DefaultsDestSizeToSourceSize_WhenSentinelValues()
+    {
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
+        // destWidth=-1, destHeight=-1 → should default to sw=8, sh=8
+        var pixels = RenderToTarget(10, 10, Black, gm =>
+            gm.Sspr(0, 0, 8, 8, 0, 0, -1, -1), pm: pm, stm: stm);
+
+        pixels[0].Should().Be(DarkBlue);       // drawn at dest
+        pixels[7].Should().Be(DarkBlue);       // last pixel of 8-wide region
+        pixels[8].Should().Be(Black);          // outside dest width
+    }
+
+    // --- Pixel-Perfect Scaling ---
+
+    [Fact]
+    public void Sspr_DoublesEachPixel_WhenDestIsDoubleSource()
+    {
+        // 2×2 source: [Red, DarkBlue; DarkGreen, Brown]
+        // Scale to 4×4: each pixel → 2×2 block
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, Black);
+        customPixels[0 * 8 + 0] = Red;
+        customPixels[0 * 8 + 1] = DarkBlue;
+        customPixels[1 * 8 + 0] = DarkGreen;
+        customPixels[1 * 8 + 1] = Brown;
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(4, 4, Black, gm =>
+            gm.Sspr(0, 0, 2, 2, 0, 0, 4, 4), pm: pm, stm: stm);
+
+        // Row 0: [Red, Red, DarkBlue, DarkBlue]
+        pixels[0 * 4 + 0].Should().Be(Red);
+        pixels[0 * 4 + 1].Should().Be(Red);
+        pixels[0 * 4 + 2].Should().Be(DarkBlue);
+        pixels[0 * 4 + 3].Should().Be(DarkBlue);
+        // Row 1: [Red, Red, DarkBlue, DarkBlue]
+        pixels[1 * 4 + 0].Should().Be(Red);
+        pixels[1 * 4 + 2].Should().Be(DarkBlue);
+        // Row 2: [DarkGreen, DarkGreen, Brown, Brown]
+        pixels[2 * 4 + 0].Should().Be(DarkGreen);
+        pixels[2 * 4 + 1].Should().Be(DarkGreen);
+        pixels[2 * 4 + 2].Should().Be(Brown);
+        pixels[2 * 4 + 3].Should().Be(Brown);
+        // Row 3: [DarkGreen, DarkGreen, Brown, Brown]
+        pixels[3 * 4 + 0].Should().Be(DarkGreen);
+        pixels[3 * 4 + 2].Should().Be(Brown);
+    }
+
+    [Fact]
+    public void Sspr_DistributesPixelsCorrectly_WhenScaling2x2To3x3()
+    {
+        // 2×2 source: [Red, DarkBlue; DarkGreen, Brown]
+        // Pico-8 floor(d*S/D): 3→2 mapping per axis = [0, 0, 1]
+        // Expected 3×3:
+        //   [Red,       Red,       DarkBlue ]
+        //   [Red,       Red,       DarkBlue ]
+        //   [DarkGreen, DarkGreen, Brown    ]
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, Black);
+        customPixels[0 * 8 + 0] = Red;
+        customPixels[0 * 8 + 1] = DarkBlue;
+        customPixels[1 * 8 + 0] = DarkGreen;
+        customPixels[1 * 8 + 1] = Brown;
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(3, 3, Black, gm =>
+            gm.Sspr(0, 0, 2, 2, 0, 0, 3, 3), pm: pm, stm: stm);
+
+        // Row 0: floor(0*2/3)=0, floor(1*2/3)=0, floor(2*2/3)=1
+        pixels[0 * 3 + 0].Should().Be(Red);
+        pixels[0 * 3 + 1].Should().Be(Red);
+        pixels[0 * 3 + 2].Should().Be(DarkBlue);
+        // Row 1: same as row 0 (floor(1*2/3)=0 → source row 0)
+        pixels[1 * 3 + 0].Should().Be(Red);
+        pixels[1 * 3 + 1].Should().Be(Red);
+        pixels[1 * 3 + 2].Should().Be(DarkBlue);
+        // Row 2: floor(2*2/3)=1 → source row 1
+        pixels[2 * 3 + 0].Should().Be(DarkGreen);
+        pixels[2 * 3 + 1].Should().Be(DarkGreen);
+        pixels[2 * 3 + 2].Should().Be(Brown);
+    }
+
+    [Fact]
+    public void Sspr_DistributesPixelsCorrectly_WhenScaling3x1To5x1()
+    {
+        // 3×1 source: [Red, DarkGreen, DarkBlue]
+        // Pico-8 floor(d*3/5): [0,0,1,1,2] → [Red, Red, DarkGreen, DarkGreen, DarkBlue]
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, Black);
+        customPixels[0] = Red;
+        customPixels[1] = DarkGreen;
+        customPixels[2] = DarkBlue;
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(5, 1, Black, gm =>
+            gm.Sspr(0, 0, 3, 1, 0, 0, 5, 1), pm: pm, stm: stm);
+
+        pixels[0].Should().Be(Red);
+        pixels[1].Should().Be(Red);
+        pixels[2].Should().Be(DarkGreen);
+        pixels[3].Should().Be(DarkGreen);
+        pixels[4].Should().Be(DarkBlue);
+    }
+
+    [Fact]
+    public void Sspr_DownscalesCorrectly_WhenDestSmallerThanSource()
+    {
+        // 4×4 source with distinct pixels at corners:
+        //   (0,0)=Red, (1,0)=DarkBlue, (2,0)=DarkGreen, (3,0)=Brown
+        //   (0,2)=Brown, (2,2)=DarkBlue  (others Black)
+        // Dest 2×2: floor(d*4/2) → samples [0, 2] per axis
+        //   (0,0)→src(0,0)=Red      (1,0)→src(2,0)=DarkGreen
+        //   (0,1)→src(0,2)=Brown    (1,1)→src(2,2)=DarkBlue
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, Black);
+        customPixels[0 * 8 + 0] = Red;
+        customPixels[0 * 8 + 1] = DarkBlue;
+        customPixels[0 * 8 + 2] = DarkGreen;
+        customPixels[0 * 8 + 3] = Brown;
+        customPixels[2 * 8 + 0] = Brown;
+        customPixels[2 * 8 + 2] = DarkBlue;
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(2, 2, White, gm =>
+            gm.Sspr(0, 0, 4, 4, 0, 0, 2, 2), pm: pm, stm: stm);
+
+        pixels[0 * 2 + 0].Should().Be(Red);
+        pixels[0 * 2 + 1].Should().Be(DarkGreen);
+        pixels[1 * 2 + 0].Should().Be(Brown);
+        pixels[1 * 2 + 1].Should().Be(DarkBlue);
+    }
+
+    [Fact]
+    public void Sspr_DownscalesCorrectly_WhenNonEvenDivision()
+    {
+        // 5×1 source: [Red, DarkBlue, DarkGreen, Brown, White]
+        // Dest 3×1: floor(d*5/3) → [0, 1, 3]
+        // Expected: [Red, DarkBlue, Brown] — position 2 (DarkGreen) skipped, 3 (Brown) kept
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, Black);
+        customPixels[0] = Red;
+        customPixels[1] = DarkBlue;
+        customPixels[2] = DarkGreen;
+        customPixels[3] = Brown;
+        customPixels[4] = White;
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(3, 1, DarkGreen, gm =>
+            gm.Sspr(0, 0, 5, 1, 0, 0, 3, 1), pm: pm, stm: stm);
+
+        pixels[0].Should().Be(Red);
+        pixels[1].Should().Be(DarkBlue);
+        pixels[2].Should().Be(Brown);
+    }
+
+    [Fact]
+    public void Sspr_ScalesNonUniformly_WhenDestAspectDiffers()
+    {
+        // 2×2 source: [Red, DarkBlue; DarkGreen, Brown]
+        // Dest 3×2: X maps [0,0,1], Y maps [0,1]
+        // Expected 3×2:
+        //   [Red,       Red,       DarkBlue]
+        //   [DarkGreen, DarkGreen, Brown   ]
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, Black);
+        customPixels[0 * 8 + 0] = Red;
+        customPixels[0 * 8 + 1] = DarkBlue;
+        customPixels[1 * 8 + 0] = DarkGreen;
+        customPixels[1 * 8 + 1] = Brown;
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(3, 2, Black, gm =>
+            gm.Sspr(0, 0, 2, 2, 0, 0, 3, 2), pm: pm, stm: stm);
+
+        // Row 0
+        pixels[0 * 3 + 0].Should().Be(Red);
+        pixels[0 * 3 + 1].Should().Be(Red);
+        pixels[0 * 3 + 2].Should().Be(DarkBlue);
+        // Row 1
+        pixels[1 * 3 + 0].Should().Be(DarkGreen);
+        pixels[1 * 3 + 1].Should().Be(DarkGreen);
+        pixels[1 * 3 + 2].Should().Be(Brown);
+    }
+
+    [Fact]
+    public void Sspr_FlipsCorrectly_WhenCombinedWithScaling()
+    {
+        // 2×2 source: [Red, DarkBlue; DarkGreen, Brown]
+        // Scale to 3×3 + flipX
+        // Unflipped 3×3 (from test 12): [R,R,B; R,R,B; G,G,N]
+        // After flipX each row reverses: [B,R,R; B,R,R; N,G,G]
+        var customPixels = new Color[8 * 8];
+        Array.Fill(customPixels, Black);
+        customPixels[0 * 8 + 0] = Red;
+        customPixels[0 * 8 + 1] = DarkBlue;
+        customPixels[1 * 8 + 0] = DarkGreen;
+        customPixels[1 * 8 + 1] = Brown;
+
+        var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, customPixels: customPixels);
+        var pixels = RenderToTarget(3, 3, Black, gm =>
+            gm.Sspr(0, 0, 2, 2, 0, 0, 3, 3, flipX: true), pm: pm, stm: stm);
+
+        // Row 0: [DarkBlue, Red, Red]
+        pixels[0 * 3 + 0].Should().Be(DarkBlue);
+        pixels[0 * 3 + 1].Should().Be(Red);
+        pixels[0 * 3 + 2].Should().Be(Red);
+        // Row 2: [Brown, DarkGreen, DarkGreen]
+        pixels[2 * 3 + 0].Should().Be(Brown);
+        pixels[2 * 3 + 1].Should().Be(DarkGreen);
+        pixels[2 * 3 + 2].Should().Be(DarkGreen);
+    }
+
+    // --- Cache Interactions ---
+
+    [Fact]
+    public void Sspr_PopulatesCache_AfterFirstCall()
+    {
+        var (stm, pm, cache) = BuildSpriteSetup(sheetW: 16, sheetH: 16, fillColor: DarkBlue);
+        RenderToTarget(8, 8, Black, gm =>
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8), pm: pm, stm: stm);
+
+        cache.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public void Sspr_ReusesCache_OnRepeatCall()
+    {
+        var (stm, pm, cache) = BuildSpriteSetup(sheetW: 16, sheetH: 16, fillColor: DarkBlue);
+        RenderToTarget(8, 8, Black, gm =>
+        {
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8);
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8);
+        }, pm: pm, stm: stm);
+
+        cache.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public void Sspr_CreatesNewCacheEntry_WhenRelevantPaletteChanges()
+    {
+        var (stm, pm, cache) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
+        RenderToTarget(8, 8, Black, gm =>
+        {
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8);
+            gm.Pal(DarkBlue, Red);
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8);
+        }, pm: pm, stm: stm);
+
+        cache.Count.Should().Be(2);
+    }
+
+    [Fact]
+    public void Sspr_ReusesCacheEntry_WhenIrrelevantPaletteChanges()
+    {
+        var (stm, pm, cache) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
+        RenderToTarget(8, 8, Black, gm =>
+        {
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8);
+            gm.Pal(Brown, Red);
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8);
+        }, pm: pm, stm: stm);
+
+        cache.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public void Sspr_SharesCacheEntry_ForIdenticalSourceContent()
+    {
+        // Solid-fill sheet: source at (0,0) and (8,0) have identical pixels
+        var (stm, pm, cache) = BuildSpriteSetup(sheetW: 16, sheetH: 16, fillColor: DarkBlue);
+        RenderToTarget(16, 16, Black, gm =>
+        {
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8);
+            gm.Sspr(8, 0, 8, 8, 0, 0, 8, 8);
+        }, pm: pm, stm: stm);
+
+        cache.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public void Sspr_CreatesSeparateCacheEntry_ForDifferentDestSize()
+    {
+        var (stm, pm, cache) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
+        RenderToTarget(10, 10, Black, gm =>
+        {
+            gm.Sspr(0, 0, 2, 2, 0, 0, 2, 2);  // 2×2 dest
+            gm.Sspr(0, 0, 2, 2, 0, 0, 3, 3);  // 3×3 dest — different size
+        }, pm: pm, stm: stm);
+
+        cache.Count.Should().Be(2);
+    }
+
+    [Fact]
+    public void Sspr_EvictsCacheEntry_AfterTtlExpires()
+    {
+        var (stm, pm, cache) = BuildSpriteSetup(
+            sheetW: 8, sheetH: 8, fillColor: DarkBlue, staleTtlFrames: 3);
+        RenderToTarget(8, 8, Black, gm =>
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8), pm: pm, stm: stm);
+
+        cache.Count.Should().Be(1);
+
         for (int i = 0; i < 4; i++)
             stm.Tick();
 
