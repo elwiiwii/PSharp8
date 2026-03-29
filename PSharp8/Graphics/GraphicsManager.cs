@@ -307,7 +307,8 @@ public class GraphicsManager
     /// </summary>
     public void Map(int sourceX, int sourceY, int destX, int destY, int sourceWidth, int sourceHeight, int flags = 0)
     {
-        
+        Texture2D texture = _spriteTextureManager.GetMapRegionTexture(sourceX, sourceY, sourceWidth, sourceHeight, flags);
+        DrawSpriteTexture(texture, destX, destY, false, false);
     }
 
     /// <summary>

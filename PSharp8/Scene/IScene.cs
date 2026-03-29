@@ -3,12 +3,12 @@
 public interface IScene
 {
     string SceneName { get; }
-    double Fps { get; }
     (int w, int h) Resolution { get; }
     void Init();
-    void Update();
-    void UpdateWhilePaused();
-    void Draw();
+    void Update(int fps);
+    void UpdateWhilePaused(int fps);
+    void Draw(int fps);
+    void DrawWhilePaused(int fps);
     string? SpritesPath { get; }
     string? FlagData { get; }
     string? MapPath { get; }

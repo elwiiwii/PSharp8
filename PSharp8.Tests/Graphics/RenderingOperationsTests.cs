@@ -48,10 +48,115 @@ public class RenderingOperationsTests(GraphicsFixture fixture) : GraphicsTestBas
         return (stm, pm, cache);
     }
 
+    private (SpriteTextureManager stm, PaletteManager pm, SpriteMapData smd) BuildMapSetup(
+        int sheetW = 16, int sheetH = 16,
+        int mapW = 16, int mapH = 16,
+        Color? fillColor = null,
+        string flags = "")
+    {
+        Color fill = fillColor ?? DarkBlue;
+        var spriteTex = MakeSolid(sheetW, sheetH, fill);
+        var mapTex = MakeSolid(mapW, mapH, fill);
+        var smd = new SpriteMapData(spriteTex, mapTex, flags);
+        var pm = new PaletteManager();
+        var cache = new LruCache<SpriteSnapshot, Texture2D>(300);
+        var stm = new SpriteTextureManager(_gd, pm, smd, cache);
+        _ownedDisposables.Add(stm);
+        return (stm, pm, smd);
+    }
+
     // -------------------------------------------------------------------------
     #endregion
     #region Map
     // -------------------------------------------------------------------------
+
+    [Fact]
+    public void Map_DrawsTileAtCorrectPosition()
+    {
+        var (stm, pm, _) = BuildMapSetup();
+        var pixels = RenderToTarget(20, 20, Black, gm =>
+            gm.Map(0, 0, 5, 3, 1, 1), pm: pm, stm: stm);
+
+        pixels[3 * 20 + 5].Should().Be(DarkBlue);
+        pixels[3 * 20 + 4].Should().Be(Black);
+    }
+
+    [Fact]
+    public void Map_DrawsMultiTileRegion()
+    {
+        var (stm, pm, _) = BuildMapSetup();
+        var pixels = RenderToTarget(20, 20, Black, gm =>
+            gm.Map(0, 0, 0, 0, 2, 2), pm: pm, stm: stm);
+
+        pixels[0].Should().Be(DarkBlue);
+        pixels[15 * 20 + 15].Should().Be(DarkBlue);
+        pixels[16 * 20].Should().Be(Black);
+    }
+
+    [Fact]
+    public void Map_AppliesPaletteMapping()
+    {
+        var (stm, pm, _) = BuildMapSetup();
+        var pixels = RenderToTarget(8, 8, Black, gm =>
+        {
+            gm.Pal(DarkBlue, Red);
+            gm.Map(0, 0, 0, 0, 1, 1);
+        }, pm: pm, stm: stm);
+
+        pixels[0].Should().Be(Red);
+    }
+
+    [Fact]
+    public void Map_AdjustsPosition_ByCameraOffset()
+    {
+        var (stm, pm, _) = BuildMapSetup();
+        var pixels = RenderToTarget(30, 8, Black, gm =>
+        {
+            gm.Camera(10, 0);
+            gm.Map(0, 0, 10, 0, 1, 1);
+        }, pm: pm, stm: stm);
+
+        pixels[0].Should().Be(DarkBlue);
+        pixels[10].Should().Be(Black);
+    }
+
+    [Fact]
+    public void Map_DrawsAllTiles_WhenLayersIsZero()
+    {
+        var (stm, pm, smd) = BuildMapSetup();
+        smd.SetFlag(0, 0x1);
+        var pixels = RenderToTarget(8, 8, Black, gm =>
+            gm.Map(0, 0, 0, 0, 1, 1, flags: 0), pm: pm, stm: stm);
+
+        pixels[0].Should().Be(DarkBlue);
+    }
+
+    [Fact]
+    public void Map_FiltersWithLayers()
+    {
+        var (stm, pm, smd) = BuildMapSetup();
+        smd.SetFlag(1, 0x1);
+        smd.SetMapTile(0, 0, 1);
+        smd.SetMapTile(1, 0, 2);
+        var pixels = RenderToTarget(16, 8, Black, gm =>
+            gm.Map(0, 0, 0, 0, 2, 1, 0x1), pm: pm, stm: stm);
+
+        pixels[0].Should().Be(DarkBlue);
+        pixels[8].Should().Be(Black);
+    }
+
+    [Fact]
+    public void Map_ProducesCorrectPixels_OnRepeatCall()
+    {
+        var (stm, pm, _) = BuildMapSetup();
+        var pixels = RenderToTarget(8, 8, Black, gm =>
+        {
+            gm.Map(0, 0, 0, 0, 1, 1);
+            gm.Map(0, 0, 0, 0, 1, 1);
+        }, pm: pm, stm: stm);
+
+        pixels[0].Should().Be(DarkBlue);
+    }
 
     // -------------------------------------------------------------------------
     #endregion
