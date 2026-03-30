@@ -4,8 +4,8 @@ using Xunit;
 
 namespace PSharp8.Tests.Graphics;
 
-[Collection("Graphics")]
-public class DrawingPrimitivesTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
+[Collection("Fna")]
+public class DrawingPrimitivesTests(FnaFixture fixture) : GraphicsTestBase(fixture)
 {
     // -------------------------------------------------------------------------
     #region Circ

@@ -1,46 +1,28 @@
 namespace PSharp8.Audio;
   
-public class Soundtrack
+public class Soundtrack(string name, List<Track> tracks)
 {
-    private readonly string _name;
-    private readonly List<Track> _tracks;
+    private readonly string _name = name;
+    private readonly List<Track> _tracks = tracks;
 
-    public Soundtrack(string name, List<Track> tracks)
-    {
-        _name = name;
-        _tracks = tracks;
-    }
-
-    public string Name => _name;
-    public List<Track> Tracks => _tracks;
+    internal string Name => _name;
+    internal List<Track> Tracks => _tracks;
 }
 
-public class Track
+public class Track(List<TrackPart> parts, int channel)
 {
-    private readonly List<TrackPart> _parts;
-    private readonly int _channel;
+    private readonly List<TrackPart> _parts = parts;
+    private readonly int _channel = channel;
 
-    public Track(List<TrackPart> parts, int channel)
-    {
-        _parts = parts;
-        _channel = channel;
-    }
-
-    public List<TrackPart> Parts => _parts;
-    public int Channel => _channel;
+    internal List<TrackPart> Parts => _parts;
+    internal int Channel => _channel;
 }
 
-public class TrackPart
+public class TrackPart(string filename, bool loop)
 {
-    private readonly string _filename;
-    private readonly bool _loop;
+    private readonly string _filename = filename;
+    private readonly bool _loop = loop;
 
-    public TrackPart(string filename, bool loop)
-    {
-        _filename = filename;
-        _loop = loop;
-    }
-
-    public string Filename => _filename;
-    public bool Loop => _loop;
+    internal string Filename => _filename;
+    internal bool Loop => _loop;
 }

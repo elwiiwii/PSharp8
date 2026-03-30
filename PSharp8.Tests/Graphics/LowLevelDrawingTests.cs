@@ -4,8 +4,8 @@ using Xunit;
 
 namespace PSharp8.Tests.Graphics;
 
-[Collection("Graphics")]
-public class LowLevelDrawingTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
+[Collection("Fna")]
+public class LowLevelDrawingTests(FnaFixture fixture) : GraphicsTestBase(fixture)
 {
     // -------------------------------------------------------------------------
     #region DrawScaledPixel

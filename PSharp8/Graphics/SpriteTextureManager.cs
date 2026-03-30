@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace PSharp8.Graphics;
 
-public class SpriteTextureManager : IDisposable
+internal class SpriteTextureManager : IDisposable
 {
     private const int SPRITE_SIZE = 8;
     private readonly GraphicsDevice _graphicsDevice;
@@ -15,7 +15,7 @@ public class SpriteTextureManager : IDisposable
     private readonly Dictionary<(int, int, int, int, int), (Texture2D tex, int sprV, int mapV, int palV)> _mapTextureCache = new();
     private readonly LruCache<SpriteSnapshot, Texture2D> _spriteCache;
 
-    public SpriteTextureManager(
+    internal SpriteTextureManager(
         GraphicsDevice graphicsDevice,
         PaletteManager paletteManager,
         SpriteMapData data,
@@ -27,7 +27,7 @@ public class SpriteTextureManager : IDisposable
         _spriteCache = spriteCache ?? throw new ArgumentNullException(nameof(spriteCache));
     }
 
-    public Texture2D GetSpritesheetTexture()
+    internal Texture2D GetSpritesheetTexture()
     {
         if (_cachedSpritesheetTexture is null ||
             _data.SpritesheetVersion != _cachedSpriteVersion ||
@@ -45,7 +45,7 @@ public class SpriteTextureManager : IDisposable
         return _cachedSpritesheetTexture;
     }
 
-    public Texture2D GetMapRegionTexture(int mapX, int mapY, int mapW, int mapH, int flags = 0)
+    internal Texture2D GetMapRegionTexture(int mapX, int mapY, int mapW, int mapH, int flags = 0)
     {
         var key = (mapX, mapY, mapW, mapH, flags);
         int texW = mapW * SPRITE_SIZE;
@@ -101,10 +101,10 @@ public class SpriteTextureManager : IDisposable
         return tex;
     }
 
-    public Rectangle GetSpriteSourceRect(int spriteIndex, int widthSprites = 1, int heightSprites = 1)
+    internal Rectangle GetSpriteSourceRect(int spriteIndex, int widthSprites = 1, int heightSprites = 1)
         => _data.GetSpriteSourceRect(spriteIndex, widthSprites, heightSprites);
 
-    public Texture2D GetSpriteTexture(int index, int w = 1, int h = 1)
+    internal Texture2D GetSpriteTexture(int index, int w = 1, int h = 1)
     {
         int texW = w * SPRITE_SIZE;
         int texH = h * SPRITE_SIZE;
@@ -122,7 +122,7 @@ public class SpriteTextureManager : IDisposable
         return GetOrCreateCachedTexture(pixels, texW, texH);
     }
 
-    public Texture2D GetScaledRegionTexture(int sx, int sy, int sw, int sh, int dw, int dh)
+    internal Texture2D GetScaledRegionTexture(int sx, int sy, int sw, int sh, int dw, int dh)
     {
         int sheetWidth = _data.SpriteSheetWidth;
         Color[] sheet = _data.SpritesheetData;
@@ -160,7 +160,7 @@ public class SpriteTextureManager : IDisposable
         return tex;
     }
 
-    public void Tick() => _spriteCache.Tick();
+    internal void Tick() => _spriteCache.Tick();
 
     public void Dispose()
     {

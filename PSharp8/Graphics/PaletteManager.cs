@@ -2,18 +2,18 @@ using Color = Microsoft.Xna.Framework.Color;
 
 namespace PSharp8.Graphics;
 
-public class PaletteManager
+internal class PaletteManager
 {
     private Dictionary<Color, Color> _paletteMap;
+    private int _paletteVersion;
 
-    public int PaletteVersion { get; private set; }
-
-    public PaletteManager()
+    internal PaletteManager()
     {
         ResetPalette();
     }
 
-    public Dictionary<Color, Color> PaletteMap => _paletteMap;
+    internal Dictionary<Color, Color> PaletteMap => _paletteMap;
+    internal int PaletteVersion => _paletteVersion;
 
 //    public void SetPalette(int index, Color value)
 //    {
@@ -24,10 +24,10 @@ public class PaletteManager
 //        SetPalette(key, value);
 //    }
 
-    public void SetPalette(Color key, Color value)
+    internal void SetPalette(Color key, Color value)
     {
         _paletteMap[key] = value;
-        PaletteVersion++;
+        _paletteVersion++;
     }
 
 //    public void SetTransparency(int index, int opacity)
@@ -40,24 +40,24 @@ public class PaletteManager
 //        SetTransparency(key, opacity);
 //    }
 
-    public void SetTransparency(Color key, int opacity)
+    internal void SetTransparency(Color key, int opacity)
     {
         if (!_paletteMap.TryGetValue(key, out var existing))
             existing = key;
 
         existing.A = (byte)Math.Clamp(opacity, 0, 255);
         _paletteMap[key] = existing;
-        PaletteVersion++;
+        _paletteVersion++;
     }
 
     [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_paletteMap))]
-    public void ResetPalette()
+    internal void ResetPalette()
     {
         _paletteMap = new(Pico8.BasePalette);
-        PaletteVersion++;
+        _paletteVersion++;
     }
 
-    public void ResetTransparency()
+    internal void ResetTransparency()
     {
         for (int i = 0; i < _paletteMap.Count; i++)
         {
@@ -66,6 +66,6 @@ public class PaletteManager
             value.A = 255;
             _paletteMap[key] = value;
         }
-        PaletteVersion++;
+        _paletteVersion++;
     }
 }

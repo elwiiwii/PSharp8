@@ -4,14 +4,14 @@ using System.Runtime.InteropServices;
 
 namespace PSharp8.Graphics;
 
-public readonly struct SpriteSnapshot : IEquatable<SpriteSnapshot>
+internal readonly struct SpriteSnapshot : IEquatable<SpriteSnapshot>
 {
     private readonly int _width;
     private readonly int _height;
     private readonly ulong _pixelHash;
     private readonly PaletteSnapshot _palette;
 
-    public SpriteSnapshot(Color[] pixels, int width, int height, Dictionary<Color, Color> paletteMap)
+    internal SpriteSnapshot(Color[] pixels, int width, int height, Dictionary<Color, Color> paletteMap)
     {
         _width = width;
         _height = height;

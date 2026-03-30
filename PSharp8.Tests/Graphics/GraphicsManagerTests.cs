@@ -6,8 +6,8 @@ using Xunit;
 
 namespace PSharp8.Tests.Graphics;
 
-[Collection("Graphics")]
-public class GraphicsManagerTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
+[Collection("Fna")]
+public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture)
 {
     // -------------------------------------------------------------------------
     #region Constructor — argument validation

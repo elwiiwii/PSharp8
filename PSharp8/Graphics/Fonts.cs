@@ -19,6 +19,6 @@ public class Font(Dictionary<string, (int Width, int Height)> characters, string
     private readonly Dictionary<string, (int Width, int Height)> _characters = characters;
     private readonly string _textureName = textureName;
 
-    public Dictionary<string, (int Width, int Height)> Characters => _characters;
-    public string TextureName => _textureName;
+    internal Dictionary<string, (int Width, int Height)> Characters => _characters;
+    internal string TextureName => _textureName;
 }

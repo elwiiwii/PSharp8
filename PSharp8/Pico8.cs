@@ -407,20 +407,14 @@ public static class Pico8
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Music
     /// </summary>
-    public static void Music(int n, double fadeMs = 0)
-        => Orch.AudioManager.Music(n, fadeMs);
-
-    /// <summary>
-    /// Mute all audio
-    /// </summary>
-    public static void Mute()
-        => Orch.AudioManager.Mute();
+    public static void Music(double n, double fadeMs = 0)
+        => Orch.AudioManager.Music((int)n, (int)fadeMs);
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Sfx
     /// </summary>
-    public static void Sfx(double n, double channel = -1.0, double offset = 0.0, double length = 31.0)
-        => Orch.AudioManager.Sfx(n, channel, offset, length);
+    public static void Sfx(double n)
+        => Orch.AudioManager.Sfx((int)n);
 
     #endregion
 

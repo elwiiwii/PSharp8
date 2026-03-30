@@ -5,8 +5,8 @@ using Xunit;
 
 namespace PSharp8.Tests.Graphics;
 
-[Collection("Graphics")]
-public class DrawStateTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
+[Collection("Fna")]
+public class DrawStateTests(FnaFixture fixture) : GraphicsTestBase(fixture)
 {
 	[Fact]
 	public void DrawState_DoesNotExposePrintStateProperty_GivenPrintSessionOwnership()

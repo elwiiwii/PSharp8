@@ -6,7 +6,7 @@ internal readonly struct PaletteSnapshot : IEquatable<PaletteSnapshot>
 {
     private readonly (uint key, uint value)[] _entries;
 
-    public PaletteSnapshot(IEnumerable<KeyValuePair<Color, Color>> relevantEntries)
+    internal PaletteSnapshot(IEnumerable<KeyValuePair<Color, Color>> relevantEntries)
     {
         _entries = relevantEntries
             .Select(kvp => (kvp.Key.PackedValue, kvp.Value.PackedValue))

@@ -1,8 +1,8 @@
 ﻿namespace PSharp8.PMath;
 
-public class CosDict
+internal class CosDict
 {
-    public Dictionary<double, double> LookupTable { get; } = new()
+    internal Dictionary<double, double> LookupTable { get; } = new()
     {
 { 0, 6553.6 },
 { 0.1, 6553.6 },

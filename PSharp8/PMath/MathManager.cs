@@ -2,7 +2,7 @@ using FixMath;
 
 namespace PSharp8.PMath;
 
-public class MathManager
+internal class MathManager
 {
     // Placeholder for future math management implementation
     internal F32 Abs(F32 f32)

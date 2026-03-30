@@ -7,8 +7,8 @@ using Xunit;
 
 namespace PSharp8.Tests.Graphics;
 
-[Collection("Graphics")]
-public class RenderingOperationsTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
+[Collection("Fna")]
+public class RenderingOperationsTests(FnaFixture fixture) : GraphicsTestBase(fixture)
 {
     // -------------------------------------------------------------------------
     #region Helpers

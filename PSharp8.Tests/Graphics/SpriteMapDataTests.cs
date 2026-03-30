@@ -7,8 +7,8 @@ using Xunit;
 
 namespace PSharp8.Tests.Graphics;
 
-[Collection("Graphics")]
-public class SpriteMapDataTests(GraphicsFixture fixture) : GraphicsTestBase(fixture)
+[Collection("Fna")]
+public class SpriteMapDataTests(FnaFixture fixture) : GraphicsTestBase(fixture)
 {
     // -------------------------------------------------------------------------
     #region Helpers

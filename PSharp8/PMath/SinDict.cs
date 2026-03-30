@@ -1,8 +1,8 @@
 ﻿namespace PSharp8.PMath;
 
-public class SinDict
+internal class SinDict
 {
-    public Dictionary<double, double> LookupTable { get; } = new()
+    internal Dictionary<double, double> LookupTable { get; } = new()
     {
 { 0, 0 },
 { 0.1, 0 },

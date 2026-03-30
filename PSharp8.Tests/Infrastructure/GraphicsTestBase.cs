@@ -19,12 +19,12 @@ public abstract class GraphicsTestBase : IDisposable
     protected static readonly Color White     = new(0xFF, 0xFF, 0xFF, 255);
     protected static readonly Color Red       = new(0xFF, 0x00, 0x4D, 255);
 
-    protected readonly GraphicsFixture _fixture;
+    protected readonly FnaFixture _fixture;
     protected readonly GraphicsDevice _gd;
     protected readonly List<Texture2D> _ownedTextures = new();
     protected readonly List<IDisposable> _ownedDisposables = new();
 
-    protected GraphicsTestBase(GraphicsFixture fixture)
+    protected GraphicsTestBase(FnaFixture fixture)
     {
         _fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
         _gd = fixture.GraphicsDevice;

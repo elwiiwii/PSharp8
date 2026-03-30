@@ -1,17 +1,19 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using SDL3;
 
 namespace PSharp8.Tests.Infrastructure;
 
 /// <summary>
-/// xUnit class fixture that spins up a real FNA <see cref="GraphicsDevice"/>.
+/// xUnit class fixture that spins up a real FNA <see cref="Game"/>,
+/// initializing both graphics (FNA3D) and audio (FAudio) subsystems.
 /// </summary>
-public sealed class GraphicsFixture : IDisposable
+public sealed class FnaFixture : IDisposable
 {
     private readonly TestGame _game;
 
-    public GraphicsFixture()
+    public FnaFixture()
     {
         ConfigureGraphicsBackend();
 
@@ -25,6 +27,17 @@ public sealed class GraphicsFixture : IDisposable
     public GraphicsDevice GraphicsDevice => _game.GraphicsDevice;
     public GraphicsDeviceManager GraphicsDeviceManager => _game.GraphicsDeviceManager;
     public GameWindow Window => _game.Window;
+
+    /// <summary>
+    /// Creates a minimal silent <see cref="SoundEffect"/> in memory (no file I/O).
+    /// Useful for audio tests that need dictionary entries without real audio assets.
+    /// </summary>
+    public static SoundEffect CreateSilentSoundEffect(int durationMs = 100, int sampleRate = 44100)
+    {
+        int sampleCount = sampleRate * durationMs / 1000;
+        byte[] silence = new byte[sampleCount * 2]; // 16-bit mono = 2 bytes per sample
+        return new SoundEffect(silence, sampleRate, AudioChannels.Mono);
+    }
 
     public void Dispose() => _game.Dispose();
 

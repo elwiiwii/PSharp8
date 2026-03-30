@@ -1,6 +1,6 @@
 namespace PSharp8.Graphics;
 
-public sealed class LruCache<TKey, TValue>
+internal sealed class LruCache<TKey, TValue>
     where TKey : notnull
     where TValue : class, IDisposable
 {
@@ -8,15 +8,15 @@ public sealed class LruCache<TKey, TValue>
     private readonly Dictionary<TKey, (TValue value, int lastAccessedFrame)> _entries = [];
     private int _currentFrame;
 
-    public LruCache(int staleTtlFrames = 150)
+    internal LruCache(int staleTtlFrames = 150)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(staleTtlFrames);
         _staleTtlFrames = staleTtlFrames;
     }
 
-    public int Count => _entries.Count;
+    internal int Count => _entries.Count;
 
-    public TValue? Get(TKey key)
+    internal TValue? Get(TKey key)
     {
         if (!_entries.TryGetValue(key, out var entry))
             return null;
@@ -24,14 +24,14 @@ public sealed class LruCache<TKey, TValue>
         return entry.value;
     }
 
-    public void Put(TKey key, TValue value)
+    internal void Put(TKey key, TValue value)
     {
         if (_entries.TryGetValue(key, out var existing))
             existing.value.Dispose();
         _entries[key] = (value, _currentFrame);
     }
 
-    public void Tick()
+    internal void Tick()
     {
         _currentFrame++;
         List<TKey>? toRemove = null;
@@ -48,7 +48,7 @@ public sealed class LruCache<TKey, TValue>
                 _entries.Remove(key);
     }
 
-    public void Clear()
+    internal void Clear()
     {
         foreach (var (_, (value, _)) in _entries)
             value.Dispose();

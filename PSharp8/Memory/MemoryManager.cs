@@ -2,7 +2,7 @@ using FixMath;
 
 namespace PSharp8.Memory;
 
-public class MemoryManager
+internal class MemoryManager
 {
     // Placeholder for future memory management implementation
     internal void CartData(string id)

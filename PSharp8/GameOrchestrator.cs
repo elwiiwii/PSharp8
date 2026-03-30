@@ -1,6 +1,6 @@
 namespace PSharp8;
 
-public class GameOrchestrator : IDisposable
+internal class GameOrchestrator : IDisposable
 {
     // Private
     private readonly AudioManager _audioManager;
@@ -9,19 +9,19 @@ public class GameOrchestrator : IDisposable
     private readonly MathManager _mathManager;
     private readonly MemoryManager _memoryManager;
     private readonly SceneManager _sceneManager;
-    private readonly SpriteMapData _sfmManager;
+    private readonly SpriteMapData _smManager;
 
     //private IScene _currentScene;
     private readonly IScene _defaultScene;
 
-    public GameOrchestrator(
+    internal GameOrchestrator(
         AudioManager audioManager,
         GraphicsManager graphicsManager,
         InputManager inputManager,
         MathManager mathManager,
         MemoryManager memoryManager,
         SceneManager sceneManager,
-        SpriteMapData sfmManager,
+        SpriteMapData smManager,
         IScene defaultScene)
     {
         _audioManager = audioManager ?? throw new ArgumentNullException(nameof(audioManager));
@@ -30,18 +30,18 @@ public class GameOrchestrator : IDisposable
         _mathManager = mathManager ?? throw new ArgumentNullException(nameof(mathManager));
         _memoryManager = memoryManager ?? throw new ArgumentNullException(nameof(memoryManager));
         _sceneManager = sceneManager ?? throw new ArgumentNullException(nameof(sceneManager));
-        _sfmManager = sfmManager ?? throw new ArgumentNullException(nameof(sfmManager));
+        _smManager = smManager ?? throw new ArgumentNullException(nameof(smManager));
         _defaultScene = defaultScene ?? throw new ArgumentNullException(nameof(defaultScene));
     }
 
     // Public
-    public AudioManager AudioManager => _audioManager;
-    public GraphicsManager GraphicsManager => _graphicsManager;
-    public InputManager InputManager => _inputManager;
-    public MathManager MathManager => _mathManager;
-    public MemoryManager MemoryManager => _memoryManager;
-    public SceneManager SceneManager => _sceneManager;
-    public SpriteMapData SfmManager => _sfmManager;
+    internal AudioManager AudioManager => _audioManager;
+    internal GraphicsManager GraphicsManager => _graphicsManager;
+    internal InputManager InputManager => _inputManager;
+    internal MathManager MathManager => _mathManager;
+    internal MemoryManager MemoryManager => _memoryManager;
+    internal SceneManager SceneManager => _sceneManager;
+    internal SpriteMapData SmManager => _smManager;
 
 //    public GameOrchestrator(
 //        IInputStateManager inputManager,

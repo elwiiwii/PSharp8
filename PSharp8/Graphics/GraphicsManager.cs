@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace PSharp8.Graphics;
 
-public class GraphicsManager
+internal class GraphicsManager
 {
     private readonly SpriteBatch _batch;
     private (int x, int y) _camera = (0, 0);
@@ -16,7 +16,7 @@ public class GraphicsManager
     private readonly Dictionary<string, Texture2D> _textureDictionary;
     private readonly GameWindow _window;
 
-    public GraphicsManager(
+    internal GraphicsManager(
         SpriteBatch batch,
         Func<(int W, int H)> getSceneResolution,
         GraphicsDeviceManager graphics,
@@ -43,7 +43,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Circ
     /// </summary>
-    public void Circ(int centerX, int centerY, int radius, Color color)
+    internal void Circ(int centerX, int centerY, int radius, Color color)
     {
         if (radius < 0) return;
 
@@ -66,7 +66,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Circfill
     /// </summary>
-    public void Circfill(int centerX, int centerY, int radius, Color color)
+    internal void Circfill(int centerX, int centerY, int radius, Color color)
     {
         if (radius < 0) return;
 
@@ -85,7 +85,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Cls
     /// </summary>
-    public void Cls(Color color)
+    internal void Cls(Color color)
     {
         _graphicsDevice.Clear(color);
     }
@@ -93,7 +93,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Line
     /// </summary>
-    public void Line(int startX, int startY, int endX, int endY, Color color)
+    internal void Line(int startX, int startY, int endX, int endY, Color color)
     {
         startX -= _camera.x;
         startY -= _camera.y;
@@ -130,7 +130,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Pset
     /// </summary>
-    public void Pset(int x, int y, Color color)
+    internal void Pset(int x, int y, Color color)
     {
         x -= _camera.x;
         y -= _camera.y;
@@ -141,7 +141,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Rect
     /// </summary>
-    public void Rect(int xLeft, int yTop, int xRight, int yBottom, Color color)
+    internal void Rect(int xLeft, int yTop, int xRight, int yBottom, Color color)
     {
         int width = xRight - xLeft + 1;
         int height = yBottom - yTop + 1;
@@ -157,7 +157,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Rectfill
     /// </summary>
-    public void Rectfill(int xLeft, int yTop, int xRight, int yBottom, Color color)
+    internal void Rectfill(int xLeft, int yTop, int xRight, int yBottom, Color color)
     {
         int width = xRight - xLeft + 1;
         int height = yBottom - yTop + 1;
@@ -170,7 +170,7 @@ public class GraphicsManager
     /// <summary>
     /// https://www.lexaloffle.com/bbs/?tid=150992
     /// </summary>
-    public void Rrect(int x, int y, int width, int height, int radius, Color color)
+    internal void Rrect(int x, int y, int width, int height, int radius, Color color)
     {
         if (width <= 0 || height <= 0) return;
 
@@ -215,7 +215,7 @@ public class GraphicsManager
     /// <summary>
     /// https://www.lexaloffle.com/bbs/?tid=150992
     /// </summary>
-    public void Rrectfill(int x, int y, int width, int height, int radius, Color color)
+    internal void Rrectfill(int x, int y, int width, int height, int radius, Color color)
     {
         if (width <= 0 || height <= 0) return;
 
@@ -257,18 +257,17 @@ public class GraphicsManager
     }
 
     #endregion
-
     #region PALETTE OPERATIONS
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Pal
     /// </summary>
-    public void Pal()
+    internal void Pal()
     {
         _paletteManager.ResetPalette();
     }
 
-    public void Pal(Color key, Color value)
+    internal void Pal(Color key, Color value)
     {
         _paletteManager.SetPalette(key, value);
     }
@@ -276,36 +275,34 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Palt
     /// </summary>
-    public void Palt()
+    internal void Palt()
     {
         _paletteManager.ResetTransparency();
     }
 
-    public void Palt(Color key, int opacity)
+    internal void Palt(Color key, int opacity)
     {
         _paletteManager.SetTransparency(key, opacity);
     }
 
     #endregion
-
     #region CAMERA STATE
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Camera
     /// </summary>
-    public void Camera(int x = 0, int y = 0)
+    internal void Camera(int x = 0, int y = 0)
     {
         _camera = (x, y);
     }
 
     #endregion
-
     #region RENDERING OPERATIONS
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Map
     /// </summary>
-    public void Map(int sourceX, int sourceY, int destX, int destY, int sourceWidth, int sourceHeight, int flags = 0)
+    internal void Map(int sourceX, int sourceY, int destX, int destY, int sourceWidth, int sourceHeight, int flags = 0)
     {
         Texture2D texture = _spriteTextureManager.GetMapRegionTexture(sourceX, sourceY, sourceWidth, sourceHeight, flags);
         DrawSpriteTexture(texture, destX, destY, false, false);
@@ -314,7 +311,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Print
     /// </summary>
-    public void Print(string text, int x, int y, Color color, Font font)
+    internal void Print(string text, int x, int y, Color color, Font font)
     {
         x -= _camera.x;
         y -= _camera.y;
@@ -362,7 +359,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Spr
     /// </summary>
-    public void Spr(int index, int x, int y, int width = 1, int height = 1, bool flipX = false, bool flipY = false)
+    internal void Spr(int index, int x, int y, int width = 1, int height = 1, bool flipX = false, bool flipY = false)
     {
         Texture2D texture = _spriteTextureManager.GetSpriteTexture(index, width, height);
         DrawSpriteTexture(texture, x, y, flipX, flipY);
@@ -371,7 +368,7 @@ public class GraphicsManager
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Sspr
     /// </summary>
-    public void Sspr(int sourceX, int sourceY, int sourceWidth, int sourceHeight, int destX, int destY,
+    internal void Sspr(int sourceX, int sourceY, int sourceWidth, int sourceHeight, int destX, int destY,
             int destWidth = -1, int destHeight = -1, bool flipX = false, bool flipY = false)
     {
         if (destWidth < 0) destWidth = sourceWidth;
@@ -382,7 +379,7 @@ public class GraphicsManager
         DrawSpriteTexture(texture, destX, destY, flipX, flipY);
     }
 
-    private void DrawSpriteTexture(Texture2D texture, int x, int y, bool flipX, bool flipY)
+    internal void DrawSpriteTexture(Texture2D texture, int x, int y, bool flipX, bool flipY)
     {
         x -= _camera.x;
         y -= _camera.y;
@@ -405,16 +402,15 @@ public class GraphicsManager
     }
 
     #endregion
-
     #region LOW-LEVEL DRAWING
 
-    public void DrawTexture(string textureName, double x, double y, Color color,
+    internal void DrawTexture(string textureName, double x, double y, Color color,
             double scaleX = 1, double scaleY = 1, bool flipX = false, bool flipY = false)
     {
         
     }
 
-    public void DrawScaledPixel(double x, double y, Color color, double scaleX = 1,
+    internal void DrawScaledPixel(double x, double y, Color color, double scaleX = 1,
             double scaleY = 1, bool flipX = false, bool flipY = false)
     {
         var (pixScaleX, pixScaleY) = ComputeViewportScales();
@@ -458,17 +454,17 @@ public class GraphicsManager
         }
     }
 
-    public void DrawLine(Vector2 start, Vector2 end, Color color, double thickness)
+    internal void DrawLine(Vector2 start, Vector2 end, Color color, double thickness)
     {
         
     }
 
-    public void DrawCirc(Vector2 center, double radius, Color color, double thickness, int segments)
+    internal void DrawCirc(Vector2 center, double radius, Color color, double thickness, int segments)
     {
         
     }
 
-    public void DrawRect(Vector2 topLeft, double width, double height, Color color, double thickness)
+    internal void DrawRect(Vector2 topLeft, double width, double height, Color color, double thickness)
     {
         
     }

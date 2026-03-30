@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace PSharp8.Graphics;
 
-public class SpriteMapData
+internal class SpriteMapData
 {
     private const int SPRITE_WIDTH = 8;
     private const int SPRITE_HEIGHT = 8;
@@ -12,26 +12,27 @@ public class SpriteMapData
     private readonly int _spriteSheetWidth;
     private readonly int _spriteSheetHeight;
     private readonly int _spriteCount;
+    private int _spritesheetVersion;
     private readonly Texture2D _originalMapTexture;
     private readonly int[] _mapData;
     private readonly int _mapWidth;
     private readonly int _mapHeight;
+    private int _mapVersion;
     private readonly int[] _originalFlags;
     private readonly int[] _flagData;
 
-    public int SpritesheetVersion { get; private set; }
-    public int MapVersion { get; private set; }
-
-    public int SpriteSheetWidth => _spriteSheetWidth;
-    public int SpriteSheetHeight => _spriteSheetHeight;
-    public int SpritesPerRow => _spriteSheetWidth / SPRITE_WIDTH;
-    public int SpriteCount => _spriteCount;
-    public int MapWidth => _mapWidth;
-    public int MapHeight => _mapHeight;
+    internal int SpriteSheetWidth => _spriteSheetWidth;
+    internal int SpriteSheetHeight => _spriteSheetHeight;
+    internal int SpritesPerRow => _spriteSheetWidth / SPRITE_WIDTH;
+    internal int SpriteCount => _spriteCount;
+    internal int SpritesheetVersion => _spritesheetVersion;
+    internal int MapWidth => _mapWidth;
+    internal int MapHeight => _mapHeight;
+    internal int MapVersion => _mapVersion;
 
     internal Color[] SpritesheetData => _spritesheetData;
 
-    public SpriteMapData(
+    internal SpriteMapData(
         Texture2D spriteTexture,
         Texture2D mapTexture,
         string flagString)
@@ -66,7 +67,7 @@ public class SpriteMapData
         Reload();
     }
 
-    public void Reload()
+    internal void Reload()
     {
         _originalSpritesheetTexture.GetData(_spritesheetData);
 
@@ -88,8 +89,8 @@ public class SpriteMapData
         }
 
         Array.Copy(_originalFlags, _flagData, _spriteCount);
-        SpritesheetVersion++;
-        MapVersion++;
+        _spritesheetVersion++;
+        _mapVersion++;
     }
 
     private int FindMatchingSpriteIndex(
@@ -124,7 +125,7 @@ public class SpriteMapData
         return 0;
     }
 
-    public Color GetSpritePixel(int x, int y)
+    internal Color GetSpritePixel(int x, int y)
     {
         if (x < 0 || x >= _spriteSheetWidth || y < 0 || y >= _spriteSheetHeight)
             return Color.Black;
@@ -132,35 +133,35 @@ public class SpriteMapData
         return _spritesheetData[x + y * _spriteSheetWidth];
     }
 
-    public void SetSpritePixel(int x, int y, Color color)
+    internal void SetSpritePixel(int x, int y, Color color)
     {
         if (x < 0 || x >= _spriteSheetWidth || y < 0 || y >= _spriteSheetHeight)
             return;
 
         _spritesheetData[x + y * _spriteSheetWidth] = color;
-        SpritesheetVersion++;
+        _spritesheetVersion++;
     }
 
-    public int GetFlag(int n)
+    internal int GetFlag(int n)
     {
         if (n < 0 || n >= _spriteCount) return 0;
         return _flagData[n];
     }
 
-    public bool GetFlag(int n, int bit)
+    internal bool GetFlag(int n, int bit)
     {
         if (n < 0 || n >= _spriteCount) return false;
         if (bit < 0 || bit > 7) return false;
         return (_flagData[n] >> bit & 1) == 1;
     }
 
-    public void SetFlag(int n, int value)
+    internal void SetFlag(int n, int value)
     {
         if (n < 0 || n >= _spriteCount) return;
         _flagData[n] = value & 0xFF;
     }
 
-    public void SetFlag(int n, int bit, bool v)
+    internal void SetFlag(int n, int bit, bool v)
     {
         if (n < 0 || n >= _spriteCount) return;
         if (bit < 0 || bit > 7) return;
@@ -170,7 +171,7 @@ public class SpriteMapData
             _flagData[n] &= ~(1 << bit);
     }
 
-    public int GetMapTile(int x, int y)
+    internal int GetMapTile(int x, int y)
     {
         if (x < 0 || x >= _mapWidth || y < 0 || y >= _mapHeight)
             return 0;
@@ -178,7 +179,7 @@ public class SpriteMapData
         return _mapData[x + y * _mapWidth];
     }
 
-    public void SetMapTile(int x, int y, int spriteNumber)
+    internal void SetMapTile(int x, int y, int spriteNumber)
     {
         if (x < 0 || x >= _mapWidth || y < 0 || y >= _mapHeight)
             return;
@@ -187,10 +188,10 @@ public class SpriteMapData
             return;
 
         _mapData[x + y * _mapWidth] = spriteNumber;
-        MapVersion++;
+        _mapVersion++;
     }
 
-    public void MapToSpritesheet1D(
+    internal void MapToSpritesheet1D(
         int cellX = 0,
         int cellY = 32,
         int destX = 0,
@@ -224,10 +225,10 @@ public class SpriteMapData
         }
 
         if (pixelsWritten > 0)
-            SpritesheetVersion++;
+            _spritesheetVersion++;
     }
 
-    public void MapToSpritesheet2D(
+    internal void MapToSpritesheet2D(
         int cellX = 0,
         int cellY = 32,
         int cellW = 128,
@@ -269,10 +270,10 @@ public class SpriteMapData
         }
 
         if (pixelsWritten > 0)
-            SpritesheetVersion++;
+            _spritesheetVersion++;
     }
 
-    public Rectangle GetSpriteSourceRect(int spriteIndex, int widthSprites = 1, int heightSprites = 1)
+    internal Rectangle GetSpriteSourceRect(int spriteIndex, int widthSprites = 1, int heightSprites = 1)
     {
         int spritesPerRow = _spriteSheetWidth / SPRITE_WIDTH;
         return new Rectangle(
