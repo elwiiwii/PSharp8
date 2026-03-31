@@ -48,14 +48,14 @@ public abstract class GraphicsTestBase : IDisposable
         return tex;
     }
 
-    protected SpriteMapData BuildSpriteMapData()
+    private protected SpriteMapData BuildSpriteMapData()
     {
         var sprite = MakeSolid(8, 8, DarkBlue);
         var map    = MakeSolid(8, 8, DarkBlue);
         return new SpriteMapData(sprite, map, "");
     }
 
-    protected SpriteTextureManager BuildSpriteTextureManager()
+    private protected SpriteTextureManager BuildSpriteTextureManager()
     {
         var pm    = new PaletteManager();
         var smd   = BuildSpriteMapData();
@@ -70,7 +70,7 @@ public abstract class GraphicsTestBase : IDisposable
     /// for <paramref name="font"/> in the textureDictionary, sized using the unified
     /// cell grid model (cellW × cellH cells, one row per tier).
     /// </summary>
-    protected Color[] PrintToTarget(int width, int height, Color clearColor, Font font,
+    private protected Color[] PrintToTarget(int width, int height, Color clearColor, Font font,
         Action<GraphicsManager> draw, (int W, int H)? cellResolution = null)
     {
         int cellW = font.Characters.Max(pair => pair.Value.Width);
@@ -85,7 +85,7 @@ public abstract class GraphicsTestBase : IDisposable
     /// accepts an explicit font texture, allowing tests to supply non-uniform or intentionally
     /// wrong-sized textures.
     /// </summary>
-    protected Color[] PrintToTarget(int width, int height, Color clearColor, Font font, Texture2D fontTexture,
+    private protected Color[] PrintToTarget(int width, int height, Color clearColor, Font font, Texture2D fontTexture,
         Action<GraphicsManager> draw, (int W, int H)? cellResolution = null)
         => PrintToTargetCore(width, height, clearColor, fontTexture, font.TextureName, draw, cellResolution);
 
@@ -139,7 +139,7 @@ public abstract class GraphicsTestBase : IDisposable
     /// shared with the <see cref="GraphicsManager"/>, allowing tests to control
     /// palette and sprite state.
     /// </summary>
-    protected Color[] RenderToTarget(int width, int height, Color clearColor, Action<GraphicsManager> draw,
+    private protected Color[] RenderToTarget(int width, int height, Color clearColor, Action<GraphicsManager> draw,
         PaletteManager? pm = null, SpriteTextureManager? stm = null,
         (int W, int H)? cellResolution = null)
     {

@@ -17,7 +17,7 @@ public class AudioManagerMusicTests(FnaFixture fixture)
         var dict = new Dictionary<string, SoundEffect>();
         foreach (var name in filenames)
             dict[name] = FnaFixture.CreateSilentSoundEffect();
-        return new AudioManager(dict);
+        return new AudioManager(dict, new Dictionary<string, SoundEffect>());
     }
 
     private static Soundtrack SingleTrackSoundtrack(string filename, bool loop, int channel = 0)

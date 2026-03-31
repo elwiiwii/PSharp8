@@ -1,6 +1,6 @@
 namespace PSharp8;
 
-internal class GameOrchestrator : IDisposable
+public class GameOrchestrator : IDisposable
 {
     // Private
     private readonly AudioManager _audioManager;

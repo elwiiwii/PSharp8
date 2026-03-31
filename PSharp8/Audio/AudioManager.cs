@@ -10,9 +10,15 @@ internal class AudioManager
     private readonly FadeController _fade = new();
     private readonly PlaybackController _playback;
 
-    internal AudioManager(Dictionary<string, SoundEffect> musicDictionary)
+    private readonly Dictionary<string, SoundEffect> _sfxDictionary;
+    private List<SfxPack>? _sfxPacks;
+    private SfxPack? _activeSfxPack;
+    internal readonly List<SoundEffectInstance> _sfxInstances = [];
+
+    internal AudioManager(Dictionary<string, SoundEffect> musicDictionary, Dictionary<string, SoundEffect> sfxDictionary)
     {
         _playback = new PlaybackController(musicDictionary ?? throw new ArgumentNullException(nameof(musicDictionary)));
+        _sfxDictionary = sfxDictionary ?? throw new ArgumentNullException(nameof(sfxDictionary));
     }
 
     #region State Properties
@@ -31,7 +37,7 @@ internal class AudioManager
     internal void Music(int n, int fadeMs)
     {
         if (_activeSoundtrack is null)
-            return;
+            throw new InvalidOperationException("No active soundtrack set.");
 
         if (n >= 0 && n >= _activeSoundtrack.Tracks.Count)
             throw new ArgumentOutOfRangeException(nameof(n));
@@ -95,6 +101,23 @@ internal class AudioManager
         _playback.Play();
     }
 
+    internal void Sfx(int n)
+    {
+        if (_activeSfxPack is null)
+            throw new InvalidOperationException("No active SFX pack set.");
+
+        var key = _activeSfxPack.Prefix + n;
+        if (!_sfxDictionary.TryGetValue(key, out var soundEffect))
+            throw new KeyNotFoundException($"Sound effect '{key}' not found in SFX dictionary.");
+
+        var newInstance = soundEffect.CreateInstance();
+        _sfxInstances.Add(newInstance);
+        newInstance.Play();
+    }
+
+    #endregion
+    #region API Extensions
+
     internal void FadeVolume(float targetPercent, int fadeMs)
     {
         targetPercent = Math.Clamp(targetPercent, 0f, 1f);
@@ -116,30 +139,6 @@ internal class AudioManager
         FadeVolume(1f, fadeMs);
     }
 
-    internal void Sfx(int n)
-    {
-        throw new NotImplementedException();
-    }
-
-    internal void Update(GameTime gameTime)
-    {
-        if (_playback.NeedsPartAdvance)
-        {
-            if (_playback.AdvancePart())
-                _fade.Reset();
-        }
-
-        if (!_fade.IsFading)
-            return;
-
-        var volume = _fade.Update(gameTime.ElapsedGameTime.TotalMilliseconds);
-        if (volume.HasValue)
-            _playback.ApplyVolume(volume.Value);
-
-        if (_fade.IsComplete)
-            CompleteFade();
-    }
-
     #endregion
     #region State Control
 
@@ -154,6 +153,22 @@ internal class AudioManager
 
         _activeSoundtrack = _soundtracks?.Find(s => s.Name == name)
             ?? throw new KeyNotFoundException($"Soundtrack '{name}' not found.");
+    }
+
+    internal void SetSfxPacks(List<SfxPack> sfxPacks)
+    {
+        _sfxPacks = sfxPacks ?? throw new ArgumentNullException(nameof(sfxPacks));
+    }
+
+    internal void SetActiveSfxPack(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+
+        if (_sfxPacks is null)
+            throw new InvalidOperationException("No SFX packs have been loaded. Call SetSfxPacks first.");
+
+        _activeSfxPack = _sfxPacks.Find(p => p.Name == name)
+            ?? throw new KeyNotFoundException($"SFX pack '{name}' not found.");
     }
 
     internal void CompleteFade()
@@ -174,6 +189,39 @@ internal class AudioManager
             if (target.HasValue)
                 _playback.ApplyVolume(target.Value);
         }
+    }
+
+    internal void CleanUpFinishedSfx()
+    {
+        for (var i = _sfxInstances.Count - 1; i >= 0; i--)
+        {
+            if (_sfxInstances[i].State == SoundState.Stopped)
+            {
+                _sfxInstances[i].Dispose();
+                _sfxInstances.RemoveAt(i);
+            }
+        }
+    }
+
+    internal void Update(GameTime gameTime)
+    {
+        CleanUpFinishedSfx();
+
+        if (_playback.NeedsPartAdvance)
+        {
+            if (_playback.AdvancePart())
+                _fade.Reset();
+        }
+
+        if (!_fade.IsFading)
+            return;
+
+        var volume = _fade.Update(gameTime.ElapsedGameTime.TotalMilliseconds);
+        if (volume.HasValue)
+            _playback.ApplyVolume(volume.Value);
+
+        if (_fade.IsComplete)
+            CompleteFade();
     }
 
     #endregion

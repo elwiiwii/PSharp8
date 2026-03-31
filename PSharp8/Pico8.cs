@@ -368,7 +368,7 @@ public static class Pico8
     /// https://pico-8.fandom.com/wiki/Fget
     /// </summary>
     public static int Fget(int n)
-        => Orch.SfmManager.GetFlag(n);
+        => Orch.SmManager.GetFlag(n);
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Load
@@ -386,19 +386,19 @@ public static class Pico8
     /// https://pico-8.fandom.com/wiki/Mget
     /// </summary>
     public static int Mget(int celx, int cely)
-        => Orch.SfmManager.GetMapTile(celx, cely);
+        => Orch.SmManager.GetMapTile(celx, cely);
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Mset
     /// </summary>
     public static void Mset(int celx, int cely, int snum = 0)
-        => Orch.SfmManager.SetMapTile(celx, cely, snum);
+        => Orch.SmManager.SetMapTile(celx, cely, snum);
 
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Reload
     /// </summary>
     public static void Reload()
-        => Orch.SfmManager.Reload();
+        => Orch.SmManager.Reload();
 
     #endregion
 
