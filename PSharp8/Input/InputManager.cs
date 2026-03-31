@@ -1,14 +1,16 @@
 namespace PSharp8.Input;
 
-internal class InputManager
+internal class InputManager : IInputManager
 {
+    public bool InputBlocked { get; set; }
+
     // Placeholder for future input management implementation
-    internal bool Btn(int button, int player)
+    public bool Btn(int button, int player)
     {
         throw new NotImplementedException();
     }
 
-    internal bool Btnp(int button, int player)
+    public bool Btnp(int button, int player)
     {
         throw new NotImplementedException();
     }

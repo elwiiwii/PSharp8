@@ -8,3 +8,4 @@ global using PSharp8.Scene;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("PSharp8.Tests")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
