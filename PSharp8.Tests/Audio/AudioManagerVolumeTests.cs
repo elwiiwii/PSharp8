@@ -8,21 +8,23 @@ using Xunit;
 namespace PSharp8.Tests.Audio;
 
 [Collection("Fna")]
-public class AudioManagerVolumeTests(FnaFixture fixture)
+public class AudioManagerVolumeTests(FnaFixture fixture) : IDisposable
 {
     private readonly FnaFixture _fixture = fixture;
+    private TempMusicDirectory? _tempDir;
+
+    public void Dispose() => _tempDir?.Dispose();
 
     private AudioManager CreateManager(params string[] filenames)
     {
-        var dict = new Dictionary<string, SoundEffect>();
-        foreach (var name in filenames)
-            dict[name] = FnaFixture.CreateSilentSoundEffect();
-        return new AudioManager(dict, new Dictionary<string, SoundEffect>());
+        var oggNames = filenames.Select(f => f + ".ogg").ToArray();
+        _tempDir = FnaFixture.CreateTempMusicDirectory(oggNames);
+        return new AudioManager(_tempDir.Path, new Dictionary<string, SoundEffect>());
     }
 
     private static Soundtrack SingleTrackSoundtrack(string filename, bool loop, int channel = 0)
     {
-        return new Soundtrack("test", [new Track([new TrackPart(filename, loop)], channel)]);
+        return new Soundtrack("test", [new Track([new TrackPart(filename + ".ogg", loop)], channel)]);
     }
 
     private static GameTime Elapsed(double ms) =>

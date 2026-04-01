@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Audio;
 
 namespace PSharp8.Audio;
 
-internal class AudioManager
+internal class AudioManager : IDisposable
 {
     private List<Soundtrack>? _soundtracks;
     private Soundtrack? _activeSoundtrack;
@@ -15,9 +15,9 @@ internal class AudioManager
     private SfxPack? _activeSfxPack;
     internal readonly List<SoundEffectInstance> _sfxInstances = [];
 
-    internal AudioManager(Dictionary<string, SoundEffect> musicDictionary, Dictionary<string, SoundEffect> sfxDictionary)
+    internal AudioManager(string musicDirectory, Dictionary<string, SoundEffect> sfxDictionary)
     {
-        _playback = new PlaybackController(musicDictionary ?? throw new ArgumentNullException(nameof(musicDictionary)));
+        _playback = new PlaybackController(musicDirectory ?? throw new ArgumentNullException(nameof(musicDirectory)));
         _sfxDictionary = sfxDictionary ?? throw new ArgumentNullException(nameof(sfxDictionary));
     }
 
@@ -222,6 +222,18 @@ internal class AudioManager
 
         if (_fade.IsComplete)
             CompleteFade();
+    }
+
+    public void Dispose()
+    {
+        _playback.StopAndDispose();
+
+        foreach (var instance in _sfxInstances)
+        {
+            instance.Stop();
+            instance.Dispose();
+        }
+        _sfxInstances.Clear();
     }
 
     #endregion

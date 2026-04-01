@@ -1,8 +1,11 @@
+using Microsoft.Xna.Framework.Audio;
+
 namespace PSharp8;
 
-public class GameOrchestrator
+public class GameOrchestrator : IDisposable
 {
-    private readonly AudioManager? _audioManager;
+    // TODO make not nullable once all managers are implemented and initialized in the constructor
+    private readonly AudioManager _audioManager;
     private readonly GraphicsManager? _graphicsManager;
     private readonly InputManager _inputManager;
     private readonly MathManager? _mathManager;
@@ -11,13 +14,18 @@ public class GameOrchestrator
     private readonly SpriteMapData? _smManager;
 
     public GameOrchestrator(
+        string musicDirectory,
+        Dictionary<string, SoundEffect> sfxDictionary,
         InputBindings? bindings = null,
         BtnpConfig? btnpConfig = null)
     {
+        _audioManager = new AudioManager(
+            musicDirectory ?? throw new ArgumentNullException(nameof(musicDirectory)),
+            sfxDictionary ?? throw new ArgumentNullException(nameof(sfxDictionary)));
+
         _inputManager = new InputManager(bindings ?? InputBindings.Default, btnpConfig);
 
         // TODO construct remaining managers
-        _audioManager = null;
         _graphicsManager = null;
         _mathManager = null;
         _memoryManager = null;
@@ -27,7 +35,7 @@ public class GameOrchestrator
         Initialize();
     }
 
-    internal AudioManager AudioManager => _audioManager!;
+    internal AudioManager AudioManager => _audioManager;
     internal GraphicsManager GraphicsManager => _graphicsManager!;
     internal InputManager InputManager => _inputManager;
     internal MathManager MathManager => _mathManager!;
@@ -42,4 +50,9 @@ public class GameOrchestrator
 
     public void UpdateInput(TimeSpan elapsed, IReadOnlyList<InputEvent> events)
         => _inputManager.Update(elapsed, events);
+
+    public void Dispose()
+    {
+        _audioManager?.Dispose();
+    }
 }

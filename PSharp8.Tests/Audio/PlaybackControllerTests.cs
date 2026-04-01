@@ -7,35 +7,37 @@ using Xunit;
 namespace PSharp8.Tests.Audio;
 
 [Collection("Fna")]
-public class PlaybackControllerTests(FnaFixture fixture)
+public class PlaybackControllerTests(FnaFixture fixture) : IDisposable
 {
     private readonly FnaFixture _fixture = fixture;
+    private TempMusicDirectory? _tempDir;
+
+    public void Dispose() => _tempDir?.Dispose();
 
     private PlaybackController CreateController(params string[] filenames)
     {
-        var dict = new Dictionary<string, SoundEffect>();
-        foreach (var name in filenames)
-            dict[name] = FnaFixture.CreateSilentSoundEffect();
-        return new PlaybackController(dict);
+        var oggNames = filenames.Select(f => f + ".ogg").ToArray();
+        _tempDir = FnaFixture.CreateTempMusicDirectory(oggNames);
+        return new PlaybackController(_tempDir.Path);
     }
 
     private static Track SinglePartTrack(string filename, bool loop, int channel = 0)
-        => new([new TrackPart(filename, loop)], channel);
+        => new([new TrackPart(filename + ".ogg", loop)], channel);
 
     private static Track MultiPartTrack(int channel, params (string filename, bool loop)[] parts)
-        => new(parts.Select(p => new TrackPart(p.filename, p.loop)).ToList(), channel);
+        => new(parts.Select(p => new TrackPart(p.filename + ".ogg", p.loop)).ToList(), channel);
 
     // -------------------------------------------------------------------------
     #region Constructor & Defaults
     // -------------------------------------------------------------------------
 
     [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenMusicDictionaryIsNull()
+    public void Constructor_ThrowsArgumentNullException_WhenMusicDirectoryIsNull()
     {
-        var act = () => new PlaybackController(musicDictionary: null!);
+        var act = () => new PlaybackController(musicDirectory: null!);
 
         act.Should().Throw<ArgumentNullException>()
-           .WithParameterName("musicDictionary");
+           .WithParameterName("musicDirectory");
     }
 
     [Fact]
@@ -70,17 +72,6 @@ public class PlaybackControllerTests(FnaFixture fixture)
         sut.HasCurrentInstance.Should().BeTrue();
         sut.IsPlaying.Should().BeTrue();
         sut.CurrentTrackIndex.Should().Be(0);
-    }
-
-    [Fact]
-    public void StartTrack_SetsLoopFlag_FromTrackPart()
-    {
-        var sut = CreateController("song1");
-        var track = SinglePartTrack("song1", loop: true);
-
-        sut.StartTrack(track, trackIndex: 0);
-
-        sut.CurrentInstance!.IsLooped.Should().BeTrue();
     }
 
     [Fact]
@@ -220,7 +211,6 @@ public class PlaybackControllerTests(FnaFixture fixture)
 
         stopped.Should().BeFalse();
         sut.CurrentPartIndex.Should().Be(1);
-        sut.CurrentInstance!.IsLooped.Should().BeTrue();
     }
 
     [Fact]

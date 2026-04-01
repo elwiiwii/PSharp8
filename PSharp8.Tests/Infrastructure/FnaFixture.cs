@@ -39,6 +39,21 @@ public sealed class FnaFixture : IDisposable
         return new SoundEffect(silence, sampleRate, AudioChannels.Mono);
     }
 
+    /// <summary>
+    /// Creates a temporary directory containing a silent OGG file for each requested filename.
+    /// The directory is cleaned up when the returned <see cref="TempMusicDirectory"/> is disposed.
+    /// </summary>
+    public static TempMusicDirectory CreateTempMusicDirectory(params string[] filenames)
+    {
+        var dir = Directory.CreateTempSubdirectory("psharp8_test_music_").FullName;
+        var silentOgg = Path.Combine(AppContext.BaseDirectory, "TestAssets", "silent.ogg");
+
+        foreach (var filename in filenames)
+            File.Copy(silentOgg, Path.Combine(dir, filename), overwrite: true);
+
+        return new TempMusicDirectory(dir);
+    }
+
     public void Dispose() => _game.Dispose();
 
     private static void ConfigureGraphicsBackend()
@@ -89,5 +104,19 @@ public sealed class FnaFixture : IDisposable
             // GraphicsDevice remains valid until Dispose() is called.
             Exit();
         }
+    }
+}
+
+/// <summary>A temporary directory containing OGG files for a single test. Deletes itself on dispose.</summary>
+public sealed class TempMusicDirectory : IDisposable
+{
+    public string Path { get; }
+
+    internal TempMusicDirectory(string path) => Path = path;
+
+    public void Dispose()
+    {
+        if (Directory.Exists(Path))
+            Directory.Delete(Path, recursive: true);
     }
 }

@@ -8,34 +8,36 @@ using Xunit;
 namespace PSharp8.Tests.Audio;
 
 [Collection("Fna")]
-public class AudioManagerUpdateTests(FnaFixture fixture)
+public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
 {
     private readonly FnaFixture _fixture = fixture;
+    private TempMusicDirectory? _tempDir;
+
+    public void Dispose() => _tempDir?.Dispose();
 
     private AudioManager CreateManager(params string[] filenames)
     {
-        var dict = new Dictionary<string, SoundEffect>();
-        foreach (var name in filenames)
-            dict[name] = FnaFixture.CreateSilentSoundEffect();
-        return new AudioManager(dict, new Dictionary<string, SoundEffect>());
+        var oggNames = filenames.Select(f => f + ".ogg").ToArray();
+        _tempDir = FnaFixture.CreateTempMusicDirectory(oggNames);
+        return new AudioManager(_tempDir.Path, new Dictionary<string, SoundEffect>());
     }
 
     private static Soundtrack SingleTrackSoundtrack(string filename, bool loop, int channel = 0)
     {
-        return new Soundtrack("test", [new Track([new TrackPart(filename, loop)], channel)]);
+        return new Soundtrack("test", [new Track([new TrackPart(filename + ".ogg", loop)], channel)]);
     }
 
     private static Soundtrack TwoTrackSoundtrack(string file1, int ch1, string file2, int ch2)
     {
         return new Soundtrack("test", [
-            new Track([new TrackPart(file1, true)], ch1),
-            new Track([new TrackPart(file2, true)], ch2)
+            new Track([new TrackPart(file1 + ".ogg", true)], ch1),
+            new Track([new TrackPart(file2 + ".ogg", true)], ch2)
         ]);
     }
 
     private static Soundtrack MultiPartSoundtrack(params (string filename, bool loop)[] parts)
     {
-        var trackParts = parts.Select(p => new TrackPart(p.filename, p.loop)).ToList();
+        var trackParts = parts.Select(p => new TrackPart(p.filename + ".ogg", p.loop)).ToList();
         return new Soundtrack("test", [new Track(trackParts, channel: 0)]);
     }
 

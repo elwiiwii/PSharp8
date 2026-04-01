@@ -30,5 +30,6 @@
 	<!-- Copy native FNA libraries to the output directory so they can be found at runtime -->
 	<ItemGroup>
 		<None Include="../FNAlibs/**" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="TestAssets/**" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 </Project>

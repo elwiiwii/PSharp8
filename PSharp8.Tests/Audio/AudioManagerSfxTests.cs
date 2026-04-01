@@ -11,7 +11,7 @@ public class AudioManagerSfxTests
     private static AudioManager CreateSut(Dictionary<string, SoundEffect>? sfxDictionary = null)
     {
         return new AudioManager(
-            new Dictionary<string, SoundEffect>(),
+            "",
             sfxDictionary ?? new Dictionary<string, SoundEffect>());
     }
 
@@ -23,7 +23,7 @@ public class AudioManagerSfxTests
     public void Constructor_ThrowsArgumentNullException_WhenSfxDictionaryIsNull()
     {
         var act = () => new AudioManager(
-            new Dictionary<string, SoundEffect>(),
+            "",
             sfxDictionary: null!);
 
         act.Should().Throw<ArgumentNullException>()
@@ -121,6 +121,8 @@ public class AudioManagerSfxTests
 
     // -------------------------------------------------------------------------
     #endregion
+    #region Sfx() Playback
+    // -------------------------------------------------------------------------
 }
 
 [Collection("Fna")]
@@ -129,14 +131,10 @@ public class AudioManagerSfxPlaybackTests(FnaFixture fixture) : GraphicsTestBase
     private AudioManager CreateSut(Dictionary<string, SoundEffect> sfxDictionary)
     {
         return new AudioManager(
-            new Dictionary<string, SoundEffect>(),
+            "",
             sfxDictionary);
     }
-
-    // -------------------------------------------------------------------------
-    #region Sfx() Playback
-    // -------------------------------------------------------------------------
-
+    
     [Fact]
     public void Sfx_PlaysSoundEffect_ForValidNumber()
     {

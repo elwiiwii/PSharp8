@@ -14,16 +14,16 @@ public class AudioManagerTests
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenMusicDictionaryIsNull()
     {
-        var act = () => new AudioManager(musicDictionary: null!, sfxDictionary: new Dictionary<string, SoundEffect>());
+        var act = () => new AudioManager(musicDirectory: null!, sfxDictionary: new Dictionary<string, SoundEffect>());
 
         act.Should().Throw<ArgumentNullException>()
-           .WithParameterName("musicDictionary");
+           .WithParameterName("musicDirectory");
     }
 
     [Fact]
     public void IsPlaying_ReturnsFalse_AfterConstruction()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
 
         sut.IsPlaying.Should().BeFalse();
     }
@@ -31,7 +31,7 @@ public class AudioManagerTests
     [Fact]
     public void CurrentTrackIndex_ReturnsNull_AfterConstruction()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
 
         sut.CurrentTrackIndex.Should().BeNull();
     }
@@ -39,7 +39,7 @@ public class AudioManagerTests
     [Fact]
     public void CurrentVolume_ReturnsZero_AfterConstruction()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
 
         sut.CurrentVolume.Should().Be(0f);
     }
@@ -52,7 +52,7 @@ public class AudioManagerTests
     [Fact]
     public void SetSoundtracks_ThrowsArgumentNullException_WhenNull()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
 
         var act = () => sut.SetSoundtracks(null!);
 
@@ -63,7 +63,7 @@ public class AudioManagerTests
     [Fact]
     public void SetActiveSoundtrack_SelectsSoundtrack_WhenNameMatches()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
         var soundtracks = new List<Soundtrack>
         {
             new("original", [new Track([new TrackPart("file1", true)], 0)]),
@@ -80,7 +80,7 @@ public class AudioManagerTests
     [Fact]
     public void SetActiveSoundtrack_ThrowsKeyNotFound_WhenNameNotFound()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
         var soundtracks = new List<Soundtrack>
         {
             new("original", [new Track([new TrackPart("file1", true)], 0)])
@@ -100,7 +100,7 @@ public class AudioManagerTests
     [Fact]
     public void Music_ThrowsArgumentOutOfRange_WhenIndexExceedsTrackCount()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
         var soundtracks = new List<Soundtrack>
         {
             new("original", [new Track([new TrackPart("file1", true)], 0)])
@@ -117,7 +117,7 @@ public class AudioManagerTests
     [Fact]
     public void Music_ThrowsInvalidOperationException_WhenNoSoundtrackSet()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
 
         var act = () => sut.Music(0, 0);
 
@@ -127,7 +127,7 @@ public class AudioManagerTests
     [Fact]
     public void Music_ThrowsInvalidOperationException_WhenNoSoundtrackSet_WithZeroFade()
     {
-        var sut = new AudioManager(new Dictionary<string, SoundEffect>(), new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
 
         var act = () => sut.Music(0, 0);
 
