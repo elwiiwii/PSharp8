@@ -4,18 +4,21 @@ public class GameOrchestrator
 {
     private readonly AudioManager? _audioManager;
     private readonly GraphicsManager? _graphicsManager;
-    private readonly InputManager? _inputManager;
+    private readonly InputManager _inputManager;
     private readonly MathManager? _mathManager;
     private readonly MemoryManager? _memoryManager;
     private readonly SceneManager? _sceneManager;
     private readonly SpriteMapData? _smManager;
 
-    public GameOrchestrator()
+    public GameOrchestrator(
+        InputBindings? bindings = null,
+        BtnpConfig? btnpConfig = null)
     {
-        // TODO actually construct the managers
+        _inputManager = new InputManager(bindings ?? InputBindings.Default, btnpConfig);
+
+        // TODO construct remaining managers
         _audioManager = null;
         _graphicsManager = null;
-        _inputManager = null;
         _mathManager = null;
         _memoryManager = null;
         _sceneManager = null;
@@ -26,7 +29,7 @@ public class GameOrchestrator
 
     internal AudioManager AudioManager => _audioManager!;
     internal GraphicsManager GraphicsManager => _graphicsManager!;
-    internal InputManager InputManager => _inputManager!;
+    internal InputManager InputManager => _inputManager;
     internal MathManager MathManager => _mathManager!;
     internal MemoryManager MemoryManager => _memoryManager!;
     internal SceneManager SceneManager => _sceneManager!;
@@ -37,18 +40,6 @@ public class GameOrchestrator
         Pico8.Initialize(this);
     }
 
-    public void ScheduleScene()
-    {
-
-    }
-
-    public void Update()
-    {
-
-    }
-
-    public void Draw()
-    {
-        
-    }
+    public void UpdateInput(TimeSpan elapsed, IReadOnlyList<InputEvent> events)
+        => _inputManager.Update(elapsed, events);
 }

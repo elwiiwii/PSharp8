@@ -9,7 +9,6 @@ namespace PSharp8.Tests.Scene;
 
 public class SceneManagerTests
 {
-
     // --------------------------------------------------------------
     #region Helpers
     // --------------------------------------------------------------
