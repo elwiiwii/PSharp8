@@ -140,6 +140,26 @@ internal class AudioManager : IDisposable
     }
 
     #endregion
+    #region Volume Settings
+
+    internal float MusicBaseVolume { get; private set; } = 1f;
+    internal float SfxBaseVolume { get; private set; } = 1f;
+
+    internal void SetMusicVolume(float volume)
+    {
+        MusicBaseVolume = volume;
+        if (_playback.HasCurrentInstance)
+            _playback.ApplyVolume(volume);
+    }
+
+    internal void SetSfxVolume(float volume)
+    {
+        SfxBaseVolume = volume;
+        foreach (var instance in _sfxInstances)
+            instance.Volume = volume;
+    }
+
+    #endregion
     #region State Control
 
     internal void SetSoundtracks(List<Soundtrack> soundtracks)

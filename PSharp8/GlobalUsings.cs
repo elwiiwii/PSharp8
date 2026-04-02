@@ -4,6 +4,7 @@ global using PSharp8.Input;
 global using PSharp8.PMath;
 global using PSharp8.Memory;
 global using PSharp8.Scene;
+global using PSharp8.Settings;
 
 using System.Runtime.CompilerServices;
 

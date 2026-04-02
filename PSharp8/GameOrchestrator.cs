@@ -51,6 +51,25 @@ public class GameOrchestrator : IDisposable
     public void UpdateInput(TimeSpan elapsed, IReadOnlyList<InputEvent> events)
         => _inputManager.Update(elapsed, events);
 
+    public void ApplyInputSettings(InputBindings bindings, BtnpConfig? btnpConfig = null)
+    {
+        ArgumentNullException.ThrowIfNull(bindings);
+        _inputManager.SetBindings(bindings);
+        if (btnpConfig is not null)
+            _inputManager.UpdateConfig(btnpConfig);
+    }
+
+    public void ApplyAudioSettings(int musicVolume, int sfxVolume)
+    {
+        if (musicVolume < 0 || musicVolume > 100)
+            throw new ArgumentOutOfRangeException(nameof(musicVolume), musicVolume, "Must be 0–100.");
+        if (sfxVolume < 0 || sfxVolume > 100)
+            throw new ArgumentOutOfRangeException(nameof(sfxVolume), sfxVolume, "Must be 0–100.");
+
+        _audioManager.SetMusicVolume(musicVolume / 100f);
+        _audioManager.SetSfxVolume(sfxVolume / 100f);
+    }
+
     public void Dispose()
     {
         _audioManager?.Dispose();

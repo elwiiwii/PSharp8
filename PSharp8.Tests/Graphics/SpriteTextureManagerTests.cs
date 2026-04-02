@@ -30,6 +30,7 @@ public class SpriteTextureManagerTests(FnaFixture fixture) : GraphicsTestBase(fi
         var smd = new SpriteMapData(sprite, map, flagString);
         var pm  = new PaletteManager();
         var stm = new SpriteTextureManager(_gd, pm, smd, MakeCache(staleTtlFrames));
+        _ownedDisposables.Add(stm);
         return (smd, stm, pm);
     }
 
@@ -266,6 +267,7 @@ public class SpriteTextureManagerTests(FnaFixture fixture) : GraphicsTestBase(fi
         var smd = new SpriteMapData(sprite, map, "");
         var pm  = new PaletteManager();
         var stm = new SpriteTextureManager(_gd, pm, smd, MakeCache());
+        _ownedDisposables.Add(stm);
 
         Texture2D regionA = stm.GetMapRegionTexture(0, 0, 1, 1);
         Texture2D regionB = stm.GetMapRegionTexture(1, 0, 1, 1);
@@ -281,6 +283,7 @@ public class SpriteTextureManagerTests(FnaFixture fixture) : GraphicsTestBase(fi
         var smd = new SpriteMapData(sprite, map, "");
         var pm  = new PaletteManager();
         var stm = new SpriteTextureManager(_gd, pm, smd, MakeCache());
+        _ownedDisposables.Add(stm);
         _ = stm.GetMapRegionTexture(0, 0, 1, 1); // prime cache
 
         // Change tile 0 to sprite 1 — but since both sprites are identical

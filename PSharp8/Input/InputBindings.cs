@@ -1,8 +1,10 @@
+using System.Text.Json.Serialization;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace PSharp8.Input;
 
+[JsonConverter(typeof(InputBindingsJsonConverter))]
 public class InputBindings
 {
     private readonly IReadOnlyDictionary<PicoButton, IReadOnlyList<InputSource>> _bindings;

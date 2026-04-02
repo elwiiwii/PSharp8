@@ -136,5 +136,42 @@ public class AudioManagerTests
 
     // -------------------------------------------------------------------------
     #endregion
+    #region SetMusicVolume / SetSfxVolume
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void MusicBaseVolume_DefaultsTo1()
+    {
+        new AudioManager("", []).MusicBaseVolume.Should().Be(1f);
+    }
+
+    [Fact]
+    public void SfxBaseVolume_DefaultsTo1()
+    {
+        new AudioManager("", []).SfxBaseVolume.Should().Be(1f);
+    }
+
+    [Fact]
+    public void SetMusicVolume_StoresMusicBaseVolume()
+    {
+        var sut = new AudioManager("", []);
+
+        sut.SetMusicVolume(0.6f);
+
+        sut.MusicBaseVolume.Should().BeApproximately(0.6f, precision: 0.001f);
+    }
+
+    [Fact]
+    public void SetSfxVolume_StoresSfxBaseVolume()
+    {
+        var sut = new AudioManager("", []);
+
+        sut.SetSfxVolume(0.3f);
+
+        sut.SfxBaseVolume.Should().BeApproximately(0.3f, precision: 0.001f);
+    }
+
+    // -------------------------------------------------------------------------
+    #endregion
 }
 

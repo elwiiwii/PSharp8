@@ -5,7 +5,9 @@ internal class InputManager : IInputManager
     private const int ButtonCount = 7; // PicoButton values 0–6
 
     private InputBindings _bindings;
-    private readonly BtnpConfig _config;
+    private BtnpConfig _config;
+
+    internal InputBindings Bindings => _bindings;
 
     private readonly bool[] _heldNow = new bool[ButtonCount];
     private readonly bool[] _wasHeld = new bool[ButtonCount];
@@ -117,6 +119,11 @@ internal class InputManager : IInputManager
         _bindings = bindings ?? throw new ArgumentNullException(nameof(bindings));
         BuildReverseMap();
         ClearState();
+    }
+
+    internal void UpdateConfig(BtnpConfig config)
+    {
+        _config = config ?? throw new ArgumentNullException(nameof(config));
     }
 
     public bool Btn(int button, int player)
