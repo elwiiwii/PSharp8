@@ -1,6 +1,4 @@
 using FluentAssertions;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using PSharp8.Audio;
 using PSharp8.Tests.Infrastructure;
 using Xunit;
@@ -19,7 +17,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
     {
         var oggNames = filenames.Select(f => f + ".ogg").ToArray();
         _tempDir = FnaFixture.CreateTempMusicDirectory(oggNames);
-        return new AudioManager(_tempDir.Path, new Dictionary<string, SoundEffect>());
+        return new AudioManager(_tempDir.Path);
     }
 
     private static Soundtrack SingleTrackSoundtrack(string filename, bool loop, int channel = 0)
@@ -41,9 +39,6 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
         return new Soundtrack("test", [new Track(trackParts, channel: 0)]);
     }
 
-    private static GameTime Elapsed(double ms) =>
-        new(TimeSpan.Zero, TimeSpan.FromMilliseconds(ms));
-
     // -------------------------------------------------------------------------
     #region Time-Based Fade Progression
     // -------------------------------------------------------------------------
@@ -58,7 +53,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
         sut.Music(0, fadeMs: 1000); // fade in over 1 second
         sut.CurrentVolume.Should().Be(0f, "precondition: starts at zero");
 
-        sut.Update(Elapsed(500)); // half the fade duration
+        sut.Update(TimeSpan.FromMilliseconds(500)); // half the fade duration
 
         sut.CurrentVolume.Should().BeApproximately(0.5f, 0.01f,
             "volume should be ~50% after half the fade duration");
@@ -74,7 +69,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
 
         sut.Music(0, fadeMs: 500);
 
-        sut.Update(Elapsed(500)); // exactly the full fade duration
+        sut.Update(TimeSpan.FromMilliseconds(500)); // exactly the full fade duration
 
         sut.CurrentVolume.Should().Be(1f, "volume should reach full after fade completes");
         sut.IsFading.Should().BeFalse("fade should be finished");
@@ -90,7 +85,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
         sut.Music(0, 0); // play at full volume
         sut.Music(-1, fadeMs: 1000); // begin fade out
 
-        sut.Update(Elapsed(500)); // half the fade duration
+        sut.Update(TimeSpan.FromMilliseconds(500)); // half the fade duration
 
         sut.CurrentVolume.Should().BeApproximately(0.5f, 0.01f,
             "volume should be ~50% after half the fade-out duration");
@@ -108,7 +103,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
         var instance = sut.CurrentInstance!;
         sut.Music(-1, fadeMs: 200);
 
-        sut.Update(Elapsed(200)); // complete the fade out
+        sut.Update(TimeSpan.FromMilliseconds(200)); // complete the fade out
 
         sut.IsPlaying.Should().BeFalse("music should stop after fade-out completes");
         sut.IsFading.Should().BeFalse();
@@ -125,7 +120,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
 
         sut.Music(0, fadeMs: 100);
 
-        sut.Update(Elapsed(999)); // far exceeds fade duration
+        sut.Update(TimeSpan.FromMilliseconds(999)); // far exceeds fade duration
 
         sut.CurrentVolume.Should().Be(1f, "volume should clamp to full, not exceed it");
         sut.IsFading.Should().BeFalse("fade should be finished");
@@ -143,7 +138,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
 
         sut.Music(1, fadeMs: 300); // crossfade
 
-        sut.Update(Elapsed(300)); // complete the crossfade
+        sut.Update(TimeSpan.FromMilliseconds(300)); // complete the crossfade
 
         oldInstance.IsDisposed.Should().BeTrue("outgoing instance should be disposed after crossfade");
         sut.CurrentVolume.Should().Be(1f, "new track should be at full volume");
@@ -160,7 +155,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
         sut.Music(0, 0); // play at full volume, no fade
         sut.CurrentVolume.Should().Be(1f);
 
-        sut.Update(Elapsed(1000)); // large elapsed, but no fade in progress
+        sut.Update(TimeSpan.FromMilliseconds(1000)); // large elapsed, but no fade in progress
 
         sut.CurrentVolume.Should().Be(1f, "volume should be unchanged when not fading");
         sut.IsFading.Should().BeFalse();
@@ -184,7 +179,7 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
         // Simulate the first (non-looping) part finishing by stopping it
         sut.CurrentInstance!.Stop();
 
-        sut.Update(Elapsed(16)); // one frame tick
+        sut.Update(TimeSpan.FromMilliseconds(16)); // one frame tick
 
         sut.CurrentPartIndex.Should().Be(1, "should have advanced to the second part");
         sut.IsPlaying.Should().BeTrue("should still be playing the next part");
@@ -199,11 +194,11 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
 
         sut.Music(0, 0);
         sut.CurrentInstance!.Stop(); // first part finishes
-        sut.Update(Elapsed(16)); // advance to second part
+        sut.Update(TimeSpan.FromMilliseconds(16)); // advance to second part
         sut.CurrentPartIndex.Should().Be(1, "precondition: on last part");
 
         sut.CurrentInstance!.Stop(); // second (last, non-looping) part finishes
-        sut.Update(Elapsed(16));
+        sut.Update(TimeSpan.FromMilliseconds(16));
 
         sut.IsPlaying.Should().BeFalse("playback should stop when all non-looping parts finish");
         sut.CurrentTrackIndex.Should().BeNull();

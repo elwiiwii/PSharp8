@@ -571,5 +571,228 @@ public class SceneManagerTests
 
     // --------------------------------------------------------------
     #endregion
+    #region initialScene constructor param
+    // --------------------------------------------------------------
+
+    [Fact]
+    public void Constructor_WithInitialScene_SceneIsActiveOnFirstUpdate()
+    {
+        var callCount = 0;
+        var mock = new Mock<IInputManager>();
+        var scene = new TestScene(setup => setup.RegisterUpdate(() => callCount++, fps: 10));
+        var sut = new SceneManager(mock.Object, initialScene: scene);
+
+        sut.InternalUpdate(TimeSpan.FromMilliseconds(100));
+
+        callCount.Should().Be(1);
+    }
+
+    [Fact]
+    public void Constructor_WithInitialScene_DoesNotFireOnSceneCreated()
+    {
+        var fired = false;
+        var mock = new Mock<IInputManager>();
+        var scene = new TestScene(_ => { });
+        _ = new SceneManager(mock.Object, initialScene: scene, onSceneCreated: _ => fired = true);
+
+        fired.Should().BeFalse();
+    }
+
+    // --------------------------------------------------------------
+    #endregion
+    #region onSceneCreated callback
+    // --------------------------------------------------------------
+
+    [Fact]
+    public void OnSceneCreated_IsInvokedWithScene_WhenScheduleTransitionApplied()
+    {
+        IScene? received = null;
+        var mock = new Mock<IInputManager>();
+        var sut = new SceneManager(mock.Object, onSceneCreated: s => received = s);
+        var scene = new TestScene(_ => { });
+
+        sut.ScheduleScene(() => scene);
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        received.Should().BeSameAs(scene);
+    }
+
+    [Fact]
+    public void OnSceneCreated_IsInvokedWithScene_WhenPushTransitionApplied()
+    {
+        var received = new List<IScene>();
+        var mock = new Mock<IInputManager>();
+        var sut = new SceneManager(mock.Object, onSceneCreated: s => received.Add(s));
+        var sceneA = new TestScene(_ => { });
+        var sceneB = new TestScene(_ => { });
+
+        sut.ScheduleScene(() => sceneA);
+        sut.InternalUpdate(TimeSpan.Zero);
+        sut.PushScene(() => sceneB);
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        received.Should().Equal(sceneA, sceneB);
+    }
+
+    [Fact]
+    public void OnSceneCreated_IsNotInvoked_WhenPopOccurs()
+    {
+        var fireCount = 0;
+        var mock = new Mock<IInputManager>();
+        var sut = new SceneManager(mock.Object, onSceneCreated: _ => fireCount++);
+        sut.ScheduleScene(() => new TestScene(_ => { }));
+        sut.InternalUpdate(TimeSpan.Zero);  // fires once for schedule
+        sut.PushScene(() => new TestScene(_ => { }));
+        sut.InternalUpdate(TimeSpan.Zero);  // fires once for push
+        fireCount = 0; // reset
+
+        sut.PopScene();
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        fireCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void OnSceneCreated_IsInvokedBeforeInit_WhenSceneCreated()
+    {
+        var order = new List<string>();
+        var mock = new Mock<IInputManager>();
+        var sut = new SceneManager(mock.Object, onSceneCreated: _ => order.Add("created"));
+        sut.ScheduleScene(() => new TestScene(_ => order.Add("init")));
+
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        order.Should().Equal("created", "init");
+    }
+
+    // --------------------------------------------------------------
+    #endregion
+    #region onBeforeSceneCallbacks callback
+    // --------------------------------------------------------------
+
+    [Fact]
+    public void OnBeforeSceneCallbacks_IsInvokedWithScene_BeforeItsRegistrations()
+    {
+        var order = new List<string>();
+        var mock = new Mock<IInputManager>();
+        var scene = new TestScene(setup => setup.RegisterUpdate(() => order.Add("callback"), fps: 10));
+        var sut = new SceneManager(mock.Object, onBeforeSceneCallbacks: _ => order.Add("before"));
+        sut.ScheduleScene(() => scene);
+        sut.InternalUpdate(TimeSpan.Zero); // applies scene
+        order.Clear();
+
+        sut.InternalUpdate(TimeSpan.FromMilliseconds(100));
+
+        order.Should().Equal("before", "callback");
+    }
+
+    [Fact]
+    public void OnBeforeSceneCallbacks_IsInvokedForEachScene_InStackOrder()
+    {
+        var received = new List<IScene>();
+        var mock = new Mock<IInputManager>();
+        var sceneA = new TestScene(_ => { });
+        var sceneB = new TestScene(_ => { });
+        var sut = new SceneManager(mock.Object, onBeforeSceneCallbacks: s => received.Add(s));
+        sut.ScheduleScene(() => sceneA);
+        sut.InternalUpdate(TimeSpan.Zero);
+        sut.PushScene(() => sceneB);
+        sut.InternalUpdate(TimeSpan.Zero);
+        received.Clear();
+
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        received.Should().Equal(sceneA, sceneB);
+    }
+
+    [Fact]
+    public void OnBeforeSceneCallbacks_IsNotInvoked_WhenStackIsEmpty()
+    {
+        var fireCount = 0;
+        var mock = new Mock<IInputManager>();
+        var sut = new SceneManager(mock.Object, onBeforeSceneCallbacks: _ => fireCount++);
+
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        fireCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void OnBeforeSceneCallbacks_IsInvoked_EvenWhenSceneHasNoRegistrations()
+    {
+        var fireCount = 0;
+        var mock = new Mock<IInputManager>();
+        var scene = new TestScene(_ => { }); // no RegisterUpdate calls
+        var sut = new SceneManager(mock.Object, onBeforeSceneCallbacks: _ => fireCount++);
+        sut.ScheduleScene(() => scene);
+        sut.InternalUpdate(TimeSpan.Zero); // applies scene
+        fireCount = 0; // reset
+
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        fireCount.Should().Be(1);
+    }
+
+    // --------------------------------------------------------------
+    #endregion
+    #region onSceneRemoved callback
+    // --------------------------------------------------------------
+
+    [Fact]
+    public void OnSceneRemoved_IsInvoked_WhenScheduleReplacesScene()
+    {
+        var removed = new List<IScene>();
+        var mock = new Mock<IInputManager>();
+        var sut = new SceneManager(mock.Object, onSceneRemoved: s => removed.Add(s));
+        var sceneA = new TestScene(_ => { });
+        sut.ScheduleScene(() => sceneA);
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        sut.ScheduleScene(() => new TestScene(_ => { }));
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        removed.Should().Equal(sceneA);
+    }
+
+    [Fact]
+    public void OnSceneRemoved_IsInvokedForEachScene_WhenScheduleClearsStack()
+    {
+        var removed = new List<IScene>();
+        var mock = new Mock<IInputManager>();
+        var sut = new SceneManager(mock.Object, onSceneRemoved: s => removed.Add(s));
+        var sceneA = new TestScene(_ => { });
+        var sceneB = new TestScene(_ => { });
+        sut.ScheduleScene(() => sceneA);
+        sut.InternalUpdate(TimeSpan.Zero);
+        sut.PushScene(() => sceneB);
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        sut.ScheduleScene(() => new TestScene(_ => { }));
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        removed.Should().Equal(sceneA, sceneB);
+    }
+
+    [Fact]
+    public void OnSceneRemoved_IsInvoked_WhenPopRemovesTopScene()
+    {
+        var removed = new List<IScene>();
+        var mock = new Mock<IInputManager>();
+        var sut = new SceneManager(mock.Object, onSceneRemoved: s => removed.Add(s));
+        var sceneA = new TestScene(_ => { });
+        var sceneB = new TestScene(_ => { });
+        sut.ScheduleScene(() => sceneA);
+        sut.InternalUpdate(TimeSpan.Zero);
+        sut.PushScene(() => sceneB);
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        sut.PopScene();
+        sut.InternalUpdate(TimeSpan.Zero);
+
+        removed.Should().Equal(sceneB);
+    }
+
+    // --------------------------------------------------------------
+    #endregion
     // --------------------------------------------------------------
 }

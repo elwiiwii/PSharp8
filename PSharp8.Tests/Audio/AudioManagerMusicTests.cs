@@ -1,6 +1,4 @@
 using FluentAssertions;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using PSharp8.Audio;
 using PSharp8.Tests.Infrastructure;
 using Xunit;
@@ -19,7 +17,7 @@ public class AudioManagerMusicTests(FnaFixture fixture) : IDisposable
     {
         var oggNames = filenames.Select(f => f + ".ogg").ToArray();
         _tempDir = FnaFixture.CreateTempMusicDirectory(oggNames);
-        return new AudioManager(_tempDir.Path, new Dictionary<string, SoundEffect>());
+        return new AudioManager(_tempDir.Path);
     }
 
     private static Soundtrack SingleTrackSoundtrack(string filename, bool loop, int channel = 0)
@@ -34,9 +32,6 @@ public class AudioManagerMusicTests(FnaFixture fixture) : IDisposable
             new Track([new TrackPart(file2 + ".ogg", true)], ch2)
         ]);
     }
-
-    private static GameTime Elapsed(double ms) =>
-        new(TimeSpan.Zero, TimeSpan.FromMilliseconds(ms));
 
     // -------------------------------------------------------------------------
     #region Fade In From Nothing
@@ -294,7 +289,7 @@ public class AudioManagerMusicTests(FnaFixture fixture) : IDisposable
         var instance = sut.CurrentInstance!;
 
         sut.Music(-1, fadeMs: 1000); // begin fade out
-        sut.Update(Elapsed(400)); // 40% through fade-out → volume ~0.6
+        sut.Update(TimeSpan.FromMilliseconds(400)); // 40% through fade-out → volume ~0.6
 
         sut.Music(0, fadeMs: 1000); // replay same track — should reverse
 
@@ -312,7 +307,7 @@ public class AudioManagerMusicTests(FnaFixture fixture) : IDisposable
         sut.SetActiveSoundtrack("test");
 
         sut.Music(0, fadeMs: 1000); // fade in from nothing
-        sut.Update(Elapsed(600)); // 60% through fade-in → volume ~0.6
+        sut.Update(TimeSpan.FromMilliseconds(600)); // 60% through fade-in → volume ~0.6
         var volumeBeforeReversal = sut.CurrentVolume;
 
         sut.Music(-1, fadeMs: 1000); // trigger fade-out — should reverse
@@ -332,12 +327,12 @@ public class AudioManagerMusicTests(FnaFixture fixture) : IDisposable
         sut.Music(0, 0); // playing at full volume
 
         sut.Music(-1, fadeMs: 1000); // begin fade out
-        sut.Update(Elapsed(400)); // 40% through → volume ~0.6
+        sut.Update(TimeSpan.FromMilliseconds(400)); // 40% through → volume ~0.6
 
         sut.Music(0, fadeMs: 1000); // reverse — should use 400ms as new fade duration
 
         // After 400ms the reversal should complete (back to full volume)
-        sut.Update(Elapsed(400));
+        sut.Update(TimeSpan.FromMilliseconds(400));
 
         sut.CurrentVolume.Should().Be(1f,
             "reversal should complete in the elapsed time of the original fade (400ms)");
@@ -356,7 +351,7 @@ public class AudioManagerMusicTests(FnaFixture fixture) : IDisposable
 
         sut.Music(1, fadeMs: 1000); // crossfade to track 1
         var newInstance = sut.CurrentInstance!;
-        sut.Update(Elapsed(300)); // 30% through crossfade
+        sut.Update(TimeSpan.FromMilliseconds(300)); // 30% through crossfade
 
         sut.Music(0, fadeMs: 1000); // replay track 0 — should reverse crossfade
 
@@ -376,7 +371,7 @@ public class AudioManagerMusicTests(FnaFixture fixture) : IDisposable
         sut.Music(0, 0); // play track 0
         sut.Music(1, fadeMs: 1000); // crossfade to track 1
         var newInstance = sut.CurrentInstance!;
-        sut.Update(Elapsed(300)); // 30% through crossfade
+        sut.Update(TimeSpan.FromMilliseconds(300)); // 30% through crossfade
 
         sut.Music(0, fadeMs: 1000); // reverse the crossfade
 

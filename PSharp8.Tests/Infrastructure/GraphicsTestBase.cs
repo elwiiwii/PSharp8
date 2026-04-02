@@ -96,7 +96,8 @@ public abstract class GraphicsTestBase : IDisposable
         using var target = new RenderTarget2D(_gd, width, height);
         var pixel = MakeSolid(1, 1, White);
         using var spriteBatch = new SpriteBatch(_gd);
-        var texDict = new Dictionary<string, Texture2D> { { texName, fontTex } };
+        var textureCache = new TextureCache(_gd, ".");
+        textureCache.Put(texName, fontTex);
         var gm = new GraphicsManager(
             spriteBatch,
             () => res,
@@ -105,7 +106,7 @@ public abstract class GraphicsTestBase : IDisposable
             new PaletteManager(),
             pixel,
             BuildSpriteTextureManager(),
-            texDict,
+            textureCache,
             _fixture.Window);
 
         _gd.SetRenderTarget(target);
@@ -155,13 +156,22 @@ public abstract class GraphicsTestBase : IDisposable
             pm ?? new PaletteManager(),
             pixel,
             stm ?? BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             _fixture.Window);
 
         _gd.SetRenderTarget(target);
         _gd.Clear(clearColor);
         spriteBatch.Begin();
-        draw(gm);
+        try
+        {
+            draw(gm);
+        }
+        catch
+        {
+            spriteBatch.End();
+            _gd.SetRenderTarget(null);
+            throw;
+        }
         spriteBatch.End();
         _gd.SetRenderTarget(null);
 

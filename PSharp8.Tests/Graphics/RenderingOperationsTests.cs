@@ -236,15 +236,16 @@ public class RenderingOperationsTests(FnaFixture fixture) : GraphicsTestBase(fix
     }
 
     [Fact]
-    public void Print_DrawsNothing_WhenFontTextureNotInDictionary()
+    public void Print_ThrowsFileNotFoundException_WhenFontTextureNotFound()
     {
-        // RenderToTarget always passes an empty textureDictionary, so the "TestFont"
-        // lookup fails and nothing should be drawn regardless of input.
+        // RenderToTarget uses an empty TextureCache (directory "."), so the font
+        // texture lookup fails with FileNotFoundException — fail loudly on missing assets.
         var font = BuildFont_SingleTier(6, 4, "A");
-        var pixels = RenderToTarget(10, 4, Black, gm =>
+
+        var act = () => RenderToTarget(10, 4, Black, gm =>
             gm.Print("A", 0, 0, Red, font));
 
-        pixels[0].Should().Be(Black);
+        act.Should().Throw<FileNotFoundException>();
     }
 
     [Fact]

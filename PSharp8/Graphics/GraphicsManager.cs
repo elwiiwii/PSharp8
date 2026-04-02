@@ -12,8 +12,8 @@ internal class GraphicsManager
     private readonly GraphicsDevice _graphicsDevice;
     private readonly PaletteManager _paletteManager;
     private readonly Texture2D _pixel;
-    private readonly SpriteTextureManager _spriteTextureManager;
-    private readonly Dictionary<string, Texture2D> _textureDictionary;
+    private SpriteTextureManager _spriteTextureManager;
+    private readonly TextureCache _textureCache;
     private readonly GameWindow _window;
 
     internal GraphicsManager(
@@ -24,7 +24,7 @@ internal class GraphicsManager
         PaletteManager paletteManager,
         Texture2D pixel,
         SpriteTextureManager spriteTextureManager,
-        Dictionary<string, Texture2D> textureDictionary,
+        TextureCache textureCache,
         GameWindow window)
     {
         _batch = batch ?? throw new ArgumentNullException(nameof(batch));
@@ -34,8 +34,13 @@ internal class GraphicsManager
         _paletteManager = paletteManager ?? throw new ArgumentNullException(nameof(paletteManager));
         _pixel = pixel ?? throw new ArgumentNullException(nameof(pixel));
         _spriteTextureManager = spriteTextureManager ?? throw new ArgumentNullException(nameof(spriteTextureManager));
-        _textureDictionary = textureDictionary ?? throw new ArgumentNullException(nameof(textureDictionary));
+        _textureCache = textureCache ?? throw new ArgumentNullException(nameof(textureCache));
         _window = window ?? throw new ArgumentNullException(nameof(window));
+    }
+
+    internal void SetSpriteTextureManager(SpriteTextureManager spriteTextureManager)
+    {
+        _spriteTextureManager = spriteTextureManager ?? throw new ArgumentNullException(nameof(spriteTextureManager));
     }
 
     #region DRAWING PRIMITIVES
@@ -313,11 +318,12 @@ internal class GraphicsManager
     /// </summary>
     internal void Print(string text, int x, int y, Color color, Font font)
     {
+        if (text.Length == 0) return;
+
         x -= _camera.x;
         y -= _camera.y;
 
-        if (!_textureDictionary.TryGetValue(font.TextureName, out var fontTexture))
-            return;
+        var fontTexture = _textureCache.Get(font.TextureName);
 
         int cellW = font.Characters.Max(pair => pair.Value.Width);
         int cellH = font.Characters.Max(pair => pair.Value.Height);
@@ -407,7 +413,28 @@ internal class GraphicsManager
     internal void DrawTexture(string textureName, double x, double y, Color color,
             double scaleX = 1, double scaleY = 1, bool flipX = false, bool flipY = false)
     {
-        
+        var texture = _textureCache.Get(textureName);
+        var destX = (int)x - _camera.x;
+        var destY = (int)y - _camera.y;
+        var (pixScaleX, pixScaleY) = ComputeViewportScales();
+
+        SpriteEffects effects = SpriteEffects.None;
+        if (flipX) effects |= SpriteEffects.FlipHorizontally;
+        if (flipY) effects |= SpriteEffects.FlipVertically;
+
+        _batch.Draw(
+            texture,
+            new Rectangle(
+                destX * pixScaleX,
+                destY * pixScaleY,
+                (int)(texture.Width * scaleX) * pixScaleX,
+                (int)(texture.Height * scaleY) * pixScaleY),
+            null,
+            color,
+            0f,
+            Vector2.Zero,
+            effects,
+            0f);
     }
 
     internal void DrawScaledPixel(double x, double y, Color color, double scaleX = 1,

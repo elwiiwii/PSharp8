@@ -1,6 +1,4 @@
 using FluentAssertions;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using PSharp8.Audio;
 using PSharp8.Tests.Infrastructure;
 using Xunit;
@@ -19,16 +17,13 @@ public class AudioManagerVolumeTests(FnaFixture fixture) : IDisposable
     {
         var oggNames = filenames.Select(f => f + ".ogg").ToArray();
         _tempDir = FnaFixture.CreateTempMusicDirectory(oggNames);
-        return new AudioManager(_tempDir.Path, new Dictionary<string, SoundEffect>());
+        return new AudioManager(_tempDir.Path);
     }
 
     private static Soundtrack SingleTrackSoundtrack(string filename, bool loop, int channel = 0)
     {
         return new Soundtrack("test", [new Track([new TrackPart(filename + ".ogg", loop)], channel)]);
     }
-
-    private static GameTime Elapsed(double ms) =>
-        new(TimeSpan.Zero, TimeSpan.FromMilliseconds(ms));
 
     // -------------------------------------------------------------------------
     #region FadeVolume / RestoreVolume
@@ -44,7 +39,7 @@ public class AudioManagerVolumeTests(FnaFixture fixture) : IDisposable
         sut.CurrentVolume.Should().Be(1f, "precondition: playing at full volume");
 
         sut.FadeVolume(0.5f, fadeMs: 1000);
-        sut.Update(Elapsed(1000));
+        sut.Update(TimeSpan.FromMilliseconds(1000));
 
         sut.CurrentVolume.Should().BeApproximately(0.5f, 0.01f,
             "volume should reach target after fade duration elapses");
@@ -92,7 +87,7 @@ public class AudioManagerVolumeTests(FnaFixture fixture) : IDisposable
         sut.Music(0, 0);
 
         sut.FadeVolume(0f, fadeMs: 500);
-        sut.Update(Elapsed(500));
+        sut.Update(TimeSpan.FromMilliseconds(500));
 
         sut.IsPlaying.Should().BeTrue(
             "FadeVolume to 0% should not stop playback, unlike Music(-1, ...)");
@@ -109,7 +104,7 @@ public class AudioManagerVolumeTests(FnaFixture fixture) : IDisposable
 
         sut.FadeVolume(0f, fadeMs: 1000); // fade from 1.0 to 0.0
 
-        sut.Update(Elapsed(500)); // halfway
+        sut.Update(TimeSpan.FromMilliseconds(500)); // halfway
 
         sut.CurrentVolume.Should().BeApproximately(0.5f, 0.01f,
             "volume should be ~50% after half the fade duration (lerping from 1.0 to 0.0)");
@@ -128,7 +123,7 @@ public class AudioManagerVolumeTests(FnaFixture fixture) : IDisposable
         sut.CurrentVolume.Should().BeApproximately(0.3f, 0.01f, "precondition");
 
         sut.RestoreVolume(fadeMs: 500);
-        sut.Update(Elapsed(500));
+        sut.Update(TimeSpan.FromMilliseconds(500));
 
         sut.CurrentVolume.Should().Be(1f,
             "volume should return to full after RestoreVolume completes");

@@ -10,24 +10,26 @@ public class AudioManagerSfxTests
 {
     private static AudioManager CreateSut(Dictionary<string, SoundEffect>? sfxDictionary = null)
     {
-        return new AudioManager(
-            "",
-            sfxDictionary ?? new Dictionary<string, SoundEffect>());
+        var m = new AudioManager("");
+        if (sfxDictionary is not null)
+            m.SetSfxDictionary(sfxDictionary);
+        return m;
     }
 
     // -------------------------------------------------------------------------
-    #region Constructor & SFX Dictionary Guards
+    #region SetSfxDictionary
     // -------------------------------------------------------------------------
 
     [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenSfxDictionaryIsNull()
+    public void SetSfxDictionary_ReplacesDictionary_SoSfxLooksUpNewEntries()
     {
-        var act = () => new AudioManager(
-            "",
-            sfxDictionary: null!);
+        var sut = new AudioManager("");
+        sut.SetSfxPacks([new SfxPack("original", "pcraft_og_")]);
+        sut.SetActiveSfxPack("original");
 
-        act.Should().Throw<ArgumentNullException>()
-           .WithParameterName("sfxDictionary");
+        // Sfx(99) should fail before the dictionary is populated
+        var actBefore = () => sut.Sfx(99);
+        actBefore.Should().Throw<KeyNotFoundException>();
     }
 
     // -------------------------------------------------------------------------
@@ -130,9 +132,9 @@ public class AudioManagerSfxPlaybackTests(FnaFixture fixture) : GraphicsTestBase
 {
     private AudioManager CreateSut(Dictionary<string, SoundEffect> sfxDictionary)
     {
-        return new AudioManager(
-            "",
-            sfxDictionary);
+        var m = new AudioManager("");
+        m.SetSfxDictionary(sfxDictionary);
+        return m;
     }
     
     [Fact]

@@ -14,16 +14,26 @@ public class AudioManagerTests
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenMusicDictionaryIsNull()
     {
-        var act = () => new AudioManager(musicDirectory: null!, sfxDictionary: new Dictionary<string, SoundEffect>());
+        var act = () => new AudioManager(musicDirectory: null!);
 
         act.Should().Throw<ArgumentNullException>()
            .WithParameterName("musicDirectory");
     }
 
     [Fact]
+    public void SetSfxDictionary_ThrowsArgumentNullException_WhenDictIsNull()
+    {
+        var sut = new AudioManager("");
+        var act = () => sut.SetSfxDictionary(null!);
+
+        act.Should().Throw<ArgumentNullException>()
+           .WithParameterName("dict");
+    }
+
+    [Fact]
     public void IsPlaying_ReturnsFalse_AfterConstruction()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
 
         sut.IsPlaying.Should().BeFalse();
     }
@@ -31,7 +41,7 @@ public class AudioManagerTests
     [Fact]
     public void CurrentTrackIndex_ReturnsNull_AfterConstruction()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
 
         sut.CurrentTrackIndex.Should().BeNull();
     }
@@ -39,7 +49,7 @@ public class AudioManagerTests
     [Fact]
     public void CurrentVolume_ReturnsZero_AfterConstruction()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
 
         sut.CurrentVolume.Should().Be(0f);
     }
@@ -52,7 +62,7 @@ public class AudioManagerTests
     [Fact]
     public void SetSoundtracks_ThrowsArgumentNullException_WhenNull()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
 
         var act = () => sut.SetSoundtracks(null!);
 
@@ -63,7 +73,7 @@ public class AudioManagerTests
     [Fact]
     public void SetActiveSoundtrack_SelectsSoundtrack_WhenNameMatches()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
         var soundtracks = new List<Soundtrack>
         {
             new("original", [new Track([new TrackPart("file1", true)], 0)]),
@@ -80,7 +90,7 @@ public class AudioManagerTests
     [Fact]
     public void SetActiveSoundtrack_ThrowsKeyNotFound_WhenNameNotFound()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
         var soundtracks = new List<Soundtrack>
         {
             new("original", [new Track([new TrackPart("file1", true)], 0)])
@@ -100,7 +110,7 @@ public class AudioManagerTests
     [Fact]
     public void Music_ThrowsArgumentOutOfRange_WhenIndexExceedsTrackCount()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
         var soundtracks = new List<Soundtrack>
         {
             new("original", [new Track([new TrackPart("file1", true)], 0)])
@@ -117,7 +127,7 @@ public class AudioManagerTests
     [Fact]
     public void Music_ThrowsInvalidOperationException_WhenNoSoundtrackSet()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
 
         var act = () => sut.Music(0, 0);
 
@@ -127,7 +137,7 @@ public class AudioManagerTests
     [Fact]
     public void Music_ThrowsInvalidOperationException_WhenNoSoundtrackSet_WithZeroFade()
     {
-        var sut = new AudioManager("", new Dictionary<string, SoundEffect>());
+        var sut = new AudioManager("");
 
         var act = () => sut.Music(0, 0);
 
@@ -142,19 +152,19 @@ public class AudioManagerTests
     [Fact]
     public void MusicBaseVolume_DefaultsTo1()
     {
-        new AudioManager("", []).MusicBaseVolume.Should().Be(1f);
+        new AudioManager("").MusicBaseVolume.Should().Be(1f);
     }
 
     [Fact]
     public void SfxBaseVolume_DefaultsTo1()
     {
-        new AudioManager("", []).SfxBaseVolume.Should().Be(1f);
+        new AudioManager("").SfxBaseVolume.Should().Be(1f);
     }
 
     [Fact]
     public void SetMusicVolume_StoresMusicBaseVolume()
     {
-        var sut = new AudioManager("", []);
+        var sut = new AudioManager("");
 
         sut.SetMusicVolume(0.6f);
 
@@ -164,7 +174,7 @@ public class AudioManagerTests
     [Fact]
     public void SetSfxVolume_StoresSfxBaseVolume()
     {
-        var sut = new AudioManager("", []);
+        var sut = new AudioManager("");
 
         sut.SetSfxVolume(0.3f);
 

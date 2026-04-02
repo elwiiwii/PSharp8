@@ -24,7 +24,7 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             new PaletteManager(),
             MakeSolid(1, 1, White),
             BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             _fixture.Window);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("batch");
@@ -42,7 +42,7 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             new PaletteManager(),
             MakeSolid(1, 1, White),
             BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             _fixture.Window);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("getSceneResolution");
@@ -60,7 +60,7 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             new PaletteManager(),
             MakeSolid(1, 1, White),
             BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             _fixture.Window);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("graphics");
@@ -78,7 +78,7 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             new PaletteManager(),
             MakeSolid(1, 1, White),
             BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             _fixture.Window);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("graphicsDevice");
@@ -96,7 +96,7 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             null!,
             MakeSolid(1, 1, White),
             BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             _fixture.Window);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("paletteManager");
@@ -114,7 +114,7 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             new PaletteManager(),
             null!,
             BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             _fixture.Window);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("pixel");
@@ -132,14 +132,14 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             new PaletteManager(),
             MakeSolid(1, 1, White),
             null!,
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             _fixture.Window);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("spriteTextureManager");
     }
 
     [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenTextureDictionaryIsNull()
+    public void Constructor_ThrowsArgumentNullException_WhenTextureCacheIsNull()
     {
         using var spriteBatch = new SpriteBatch(_gd);
         var act = () => new GraphicsManager(
@@ -153,7 +153,7 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             null!,
             _fixture.Window);
 
-        act.Should().Throw<ArgumentNullException>().WithParameterName("textureDictionary");
+        act.Should().Throw<ArgumentNullException>().WithParameterName("textureCache");
     }
 
     [Fact]
@@ -168,10 +168,55 @@ public class GraphicsManagerTests(FnaFixture fixture) : GraphicsTestBase(fixture
             new PaletteManager(),
             MakeSolid(1, 1, White),
             BuildSpriteTextureManager(),
-            new Dictionary<string, Texture2D>(),
+            new TextureCache(_gd, "."),
             null!);
 
         act.Should().Throw<ArgumentNullException>().WithParameterName("window");
+    }
+
+    // -------------------------------------------------------------------------
+    #endregion
+    #region SetSpriteTextureManager
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void SetSpriteTextureManager_ThrowsArgumentNullException_WhenNull()
+    {
+        using var batch = new SpriteBatch(_gd);
+        var gm = new GraphicsManager(
+            batch,
+            () => (128, 128),
+            _fixture.GraphicsDeviceManager,
+            _gd,
+            new PaletteManager(),
+            MakeSolid(1, 1, White),
+            BuildSpriteTextureManager(),
+            new TextureCache(_gd, "."),
+            _fixture.Window);
+
+        var act = () => gm.SetSpriteTextureManager(null!);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("spriteTextureManager");
+    }
+
+    [Fact]
+    public void SetSpriteTextureManager_DoesNotThrow_WhenValidInstance()
+    {
+        using var batch = new SpriteBatch(_gd);
+        var gm = new GraphicsManager(
+            batch,
+            () => (128, 128),
+            _fixture.GraphicsDeviceManager,
+            _gd,
+            new PaletteManager(),
+            MakeSolid(1, 1, White),
+            BuildSpriteTextureManager(),
+            new TextureCache(_gd, "."),
+            _fixture.Window);
+
+        var act = () => gm.SetSpriteTextureManager(BuildSpriteTextureManager());
+
+        act.Should().NotThrow();
     }
 
     // -------------------------------------------------------------------------

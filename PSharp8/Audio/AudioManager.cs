@@ -1,4 +1,3 @@
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 
 namespace PSharp8.Audio;
@@ -10,15 +9,19 @@ internal class AudioManager : IDisposable
     private readonly FadeController _fade = new();
     private readonly PlaybackController _playback;
 
-    private readonly Dictionary<string, SoundEffect> _sfxDictionary;
+    private Dictionary<string, SoundEffect> _sfxDictionary = [];
     private List<SfxPack>? _sfxPacks;
     private SfxPack? _activeSfxPack;
     internal readonly List<SoundEffectInstance> _sfxInstances = [];
 
-    internal AudioManager(string musicDirectory, Dictionary<string, SoundEffect> sfxDictionary)
+    internal AudioManager(string musicDirectory)
     {
         _playback = new PlaybackController(musicDirectory ?? throw new ArgumentNullException(nameof(musicDirectory)));
-        _sfxDictionary = sfxDictionary ?? throw new ArgumentNullException(nameof(sfxDictionary));
+    }
+
+    internal void SetSfxDictionary(Dictionary<string, SoundEffect> dict)
+    {
+        _sfxDictionary = dict ?? throw new ArgumentNullException(nameof(dict));
     }
 
     #region State Properties
@@ -223,7 +226,7 @@ internal class AudioManager : IDisposable
         }
     }
 
-    internal void Update(GameTime gameTime)
+    internal void Update(TimeSpan elapsed)
     {
         CleanUpFinishedSfx();
 
@@ -236,7 +239,7 @@ internal class AudioManager : IDisposable
         if (!_fade.IsFading)
             return;
 
-        var volume = _fade.Update(gameTime.ElapsedGameTime.TotalMilliseconds);
+        var volume = _fade.Update(elapsed.TotalMilliseconds);
         if (volume.HasValue)
             _playback.ApplyVolume(volume.Value);
 
