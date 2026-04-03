@@ -32,7 +32,7 @@ public class SceneManagerTests
         public void Init(ISceneSetup setup) => _configure(setup);
         public string? SpritesPath => null;
         public string? MapPath => null;
-        public string? FlagDataPath => null;
+        public string? FlagData => null;
         public IReadOnlyList<Soundtrack> Music => [];
         public IReadOnlyList<SfxPack> Sfx => [];
     }

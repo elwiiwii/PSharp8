@@ -121,7 +121,7 @@ public class GameOrchestrator : IDisposable
             spriteTexture = Texture2D.FromStream(_graphicsDevice, spriteStream);
             using var mapStream = File.OpenRead(scene.MapPath);
             mapTexture = Texture2D.FromStream(_graphicsDevice, mapStream);
-            flagString = scene.FlagDataPath is not null ? File.ReadAllText(scene.FlagDataPath) : "";
+            flagString = scene.FlagData is not null ? File.ReadAllText(scene.FlagData) : "";
         }
         else
         {

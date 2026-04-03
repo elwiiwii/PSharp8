@@ -38,7 +38,7 @@ public class GameOrchestratorGraphicsTests : GraphicsTestBase
         public void Init(ISceneSetup setup) { }
         public string? SpritesPath => null;
         public string? MapPath => null;
-        public string? FlagDataPath => null;
+        public string? FlagData => null;
         public IReadOnlyList<Soundtrack> Music => [];
         public IReadOnlyList<SfxPack> Sfx => [];
     }
@@ -49,7 +49,7 @@ public class GameOrchestratorGraphicsTests : GraphicsTestBase
         public void Init(ISceneSetup setup) => configure(setup);
         public string? SpritesPath => null;
         public string? MapPath => null;
-        public string? FlagDataPath => null;
+        public string? FlagData => null;
         public IReadOnlyList<Soundtrack> Music => [];
         public IReadOnlyList<SfxPack> Sfx => [];
     }

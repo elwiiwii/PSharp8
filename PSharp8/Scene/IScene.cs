@@ -6,7 +6,7 @@ public interface IScene
     void Init(ISceneSetup setup);
     string? SpritesPath { get; }
     string? MapPath { get; }
-    string? FlagDataPath { get; }
+    string? FlagData { get; }
     IReadOnlyList<Soundtrack> Music { get; }
     IReadOnlyList<SfxPack> Sfx { get; }
 }
