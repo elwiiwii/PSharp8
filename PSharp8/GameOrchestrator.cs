@@ -17,7 +17,7 @@ public class GameOrchestrator : IDisposable
     private readonly AudioManager _audioManager;
     private readonly GraphicsManager _graphicsManager;
     private readonly InputManager _inputManager;
-    private readonly MathManager? _mathManager;    // TODO
+    private readonly MathManager _mathManager;
     private readonly MemoryManager? _memoryManager; // TODO
     private readonly SceneManager _sceneManager;
 
@@ -89,9 +89,8 @@ public class GameOrchestrator : IDisposable
             },
             onSceneRemoved: RemoveSceneAssets);
 
-        // TODO construct remaining managers
-        _mathManager = null;
-        _memoryManager = null;
+        _mathManager = new MathManager();
+        _memoryManager = null; // TODO
 
         Initialize();
     }
@@ -99,7 +98,7 @@ public class GameOrchestrator : IDisposable
     internal AudioManager AudioManager => _audioManager;
     internal GraphicsManager GraphicsManager => _graphicsManager;
     internal InputManager InputManager => _inputManager;
-    internal MathManager MathManager => _mathManager!;
+    internal MathManager MathManager => _mathManager;
     internal MemoryManager MemoryManager => _memoryManager!;
     internal SceneManager SceneManager => _sceneManager;
     internal SpriteMapData SmManager => _currentSmData!;
@@ -206,6 +205,15 @@ public class GameOrchestrator : IDisposable
 
         _audioManager.SetMusicVolume(musicVolume / 100f);
         _audioManager.SetSfxVolume(sfxVolume / 100f);
+    }
+
+    public void LoadSoundtracks(IReadOnlyList<Soundtrack> soundtracks, string activeSoundtrack)
+    {
+        ArgumentNullException.ThrowIfNull(soundtracks);
+        ArgumentNullException.ThrowIfNull(activeSoundtrack);
+
+        _audioManager.SetSoundtracks(soundtracks.ToList());
+        _audioManager.SetActiveSoundtrack(activeSoundtrack);
     }
 
     public void Dispose()

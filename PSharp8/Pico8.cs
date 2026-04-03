@@ -400,6 +400,15 @@ public static class Pico8
     public static void Reload()
         => Orch.SmManager.Reload();
 
+    public static void MapToSpritesheet1D(
+        int cellX = 0, int cellY = 32, int destX = 0, int destY = 64, int length = 8192, int @base = 16)
+        => Orch.SmManager.MapToSpritesheet1D(cellX, cellY, destX, destY, length, @base);
+
+    public static void MapToSpritesheet2D(
+        int cellX = 0, int cellY = 32, int cellW = 128, int cellH = 32,
+        int destX = 0, int destY = 64, int destW = 128, int destH = 64, int @base = 16)
+        => Orch.SmManager.MapToSpritesheet2D(cellX, cellY, cellW, cellH, destX, destY, destW, destH, @base);
+
     #endregion
 
     #region AUDIO API
@@ -510,12 +519,6 @@ public static class Pico8
     public static F32 Rnd(F32 max, Random? random = null)
         => Orch.MathManager.Rnd(max, random);
 
-    public static F32 Rnd(double max, object reference)
-        => Orch.MathManager.Rnd(F32.FromDouble(max), reference);
-
-    public static F32 Rnd(F32 max, object reference)
-        => Orch.MathManager.Rnd(max, reference);
-
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Sgn
     /// </summary>
@@ -542,12 +545,6 @@ public static class Pico8
 
     public static void Srand(F32 seed, Random? random = null)
         => Orch.MathManager.Srand(seed, random);
-
-    public static void Srand(double seed, object reference)
-        => Orch.MathManager.Srand(F32.FromDouble(seed), reference);
-
-    public static void Srand(F32 seed, object reference)
-        => Orch.MathManager.Srand(seed, reference);
 
     #endregion
 
