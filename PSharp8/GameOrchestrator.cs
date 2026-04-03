@@ -124,8 +124,8 @@ public class GameOrchestrator : IDisposable
         }
         else
         {
-            spriteTexture = new Texture2D(_graphicsDevice, 8, 8);
-            mapTexture = new Texture2D(_graphicsDevice, 8, 8);
+            spriteTexture = new Texture2D(_graphicsDevice, 128, 128);
+            mapTexture = new Texture2D(_graphicsDevice, 128 * 8, 64 * 8);
             flagString = "";
         }
 
