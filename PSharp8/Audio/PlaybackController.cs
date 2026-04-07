@@ -129,7 +129,7 @@ internal class PlaybackController
 
     private OggStreamPlayer CreatePlayerFromPart(TrackPart part)
     {
-        var path = Path.Combine(_musicDirectory, part.Filename);
+        var path = Path.Combine(_musicDirectory, part.Filename + ".ogg");
         if (!File.Exists(path))
             throw new FileNotFoundException(
                 $"Music file '{part.Filename}' not found in directory '{_musicDirectory}'.", path);

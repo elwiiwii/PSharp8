@@ -22,7 +22,7 @@ public class AudioManagerVolumeTests(FnaFixture fixture) : IDisposable
 
     private static Soundtrack SingleTrackSoundtrack(string filename, bool loop, int channel = 0)
     {
-        return new Soundtrack("test", [new Track([new TrackPart(filename + ".ogg", loop)], channel)]);
+        return new Soundtrack("test", [new Track([new TrackPart(filename, loop)], channel)]);
     }
 
     // -------------------------------------------------------------------------

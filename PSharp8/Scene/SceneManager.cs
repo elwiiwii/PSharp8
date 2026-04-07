@@ -144,4 +144,7 @@ internal class SceneManager
         setup.ApplyPendingResolution();
         return (scene, setup);
     }
+
+    internal (int Width, int Height) TopResolution
+        => _stack.Count > 0 ? _stack[^1].Setup.ActiveResolution : (128, 128);
 }

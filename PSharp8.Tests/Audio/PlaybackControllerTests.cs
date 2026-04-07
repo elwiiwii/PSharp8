@@ -22,10 +22,10 @@ public class PlaybackControllerTests(FnaFixture fixture) : IDisposable
     }
 
     private static Track SinglePartTrack(string filename, bool loop, int channel = 0)
-        => new([new TrackPart(filename + ".ogg", loop)], channel);
+        => new([new TrackPart(filename, loop)], channel);
 
     private static Track MultiPartTrack(int channel, params (string filename, bool loop)[] parts)
-        => new(parts.Select(p => new TrackPart(p.filename + ".ogg", p.loop)).ToList(), channel);
+        => new(parts.Select(p => new TrackPart(p.filename, p.loop)).ToList(), channel);
 
     // -------------------------------------------------------------------------
     #region Constructor & Defaults

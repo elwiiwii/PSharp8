@@ -22,20 +22,20 @@ public class AudioManagerUpdateTests(FnaFixture fixture) : IDisposable
 
     private static Soundtrack SingleTrackSoundtrack(string filename, bool loop, int channel = 0)
     {
-        return new Soundtrack("test", [new Track([new TrackPart(filename + ".ogg", loop)], channel)]);
+        return new Soundtrack("test", [new Track([new TrackPart(filename, loop)], channel)]);
     }
 
     private static Soundtrack TwoTrackSoundtrack(string file1, int ch1, string file2, int ch2)
     {
         return new Soundtrack("test", [
-            new Track([new TrackPart(file1 + ".ogg", true)], ch1),
-            new Track([new TrackPart(file2 + ".ogg", true)], ch2)
+            new Track([new TrackPart(file1, true)], ch1),
+            new Track([new TrackPart(file2, true)], ch2)
         ]);
     }
 
     private static Soundtrack MultiPartSoundtrack(params (string filename, bool loop)[] parts)
     {
-        var trackParts = parts.Select(p => new TrackPart(p.filename + ".ogg", p.loop)).ToList();
+        var trackParts = parts.Select(p => new TrackPart(p.filename, p.loop)).ToList();
         return new Soundtrack("test", [new Track(trackParts, channel: 0)]);
     }
 

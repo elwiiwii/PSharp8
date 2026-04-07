@@ -323,15 +323,7 @@ internal class GraphicsManager
         x -= _camera.x;
         y -= _camera.y;
 
-        Texture2D fontTexture;
-        try
-        {
-            fontTexture = _textureCache.Get(font.TextureName);
-        }
-        catch (FileNotFoundException)
-        {
-            return; // Font asset not available (e.g., test context without content)
-        }
+        Texture2D fontTexture = _textureCache.Get(font.TextureName) ?? throw new FileNotFoundException($"Font texture '{font.TextureName}' not found in texture cache.");
 
         int cellW = font.Characters.Max(pair => pair.Value.Width);
         int cellH = font.Characters.Max(pair => pair.Value.Height);
@@ -398,15 +390,13 @@ internal class GraphicsManager
         x -= _camera.x;
         y -= _camera.y;
 
-        var (scaleX, scaleY) = ComputeViewportScales();
-
         SpriteEffects effects = SpriteEffects.None;
         if (flipX) effects |= SpriteEffects.FlipHorizontally;
         if (flipY) effects |= SpriteEffects.FlipVertically;
 
         _batch.Draw(
             texture,
-            new Rectangle(x * scaleX, y * scaleY, texture.Width * scaleX, texture.Height * scaleY),
+            new Rectangle(x, y, texture.Width, texture.Height),
             null,
             Color.White,
             0f,
@@ -424,7 +414,6 @@ internal class GraphicsManager
         var texture = _textureCache.Get(textureName);
         var destX = (int)x - _camera.x;
         var destY = (int)y - _camera.y;
-        var (pixScaleX, pixScaleY) = ComputeViewportScales();
 
         SpriteEffects effects = SpriteEffects.None;
         if (flipX) effects |= SpriteEffects.FlipHorizontally;
@@ -433,10 +422,10 @@ internal class GraphicsManager
         _batch.Draw(
             texture,
             new Rectangle(
-                destX * pixScaleX,
-                destY * pixScaleY,
-                (int)(texture.Width * scaleX) * pixScaleX,
-                (int)(texture.Height * scaleY) * pixScaleY),
+                destX,
+                destY,
+                (int)(texture.Width * scaleX),
+                (int)(texture.Height * scaleY)),
             null,
             color,
             0f,
@@ -448,27 +437,13 @@ internal class GraphicsManager
     internal void DrawScaledPixel(double x, double y, Color color, double scaleX = 1,
             double scaleY = 1, bool flipX = false, bool flipY = false)
     {
-        var (pixScaleX, pixScaleY) = ComputeViewportScales();
         _batch.Draw(_pixel,
             new Rectangle(
-                (int)x * pixScaleX,
-                (int)y * pixScaleY,
-                Math.Max(1, (int)scaleX * pixScaleX),
-                Math.Max(1, (int)scaleY * pixScaleY)),
+                (int)x,
+                (int)y,
+                Math.Max(1, (int)scaleX),
+                Math.Max(1, (int)scaleY)),
             color);
-    }
-
-    /// <summary>
-    /// Returns the integer pixel scale factors that map one cell unit to pixels
-    /// on the X and Y axes independently.
-    /// Each axis uses the largest integer multiplier that fits the cell grid
-    /// within the viewport on that axis — no letterboxing, no shared scale.
-    /// </summary>
-    private (int scaleX, int scaleY) ComputeViewportScales()
-    {
-        var vp = _graphicsDevice.Viewport;
-        var (cellW, cellH) = _getSceneResolution();
-        return (Math.Max(1, vp.Width / cellW), Math.Max(1, vp.Height / cellH));
     }
 
     private static void IterateMidpointArc(int radius, Action<int, int> onStep)

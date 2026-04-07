@@ -319,7 +319,7 @@ public class GameOrchestratorGraphicsTests : GraphicsTestBase
 
         sut.ApplyInputSettings(newBindings);
 
-        sut.InputManager.Bindings[PicoButton.Left].Should().ContainSingle()
+        ((InputManager)sut.InputManager).Bindings[PicoButton.Left].Should().ContainSingle()
             .Which.Should().Be(new KeyboardSource(Keys.Q));
     }
 

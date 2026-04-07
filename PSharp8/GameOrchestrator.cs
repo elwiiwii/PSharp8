@@ -14,6 +14,7 @@ public class GameOrchestrator : IDisposable
         Dictionary<string, SoundEffect> Sfx);
 
     private readonly string _sfxDirectory;
+    private readonly string _texturesDirectory;
     private readonly AudioManager _audioManager;
     private readonly GraphicsManager _graphicsManager;
     private readonly IInputManager _inputManager;
@@ -26,6 +27,7 @@ public class GameOrchestrator : IDisposable
     private readonly SpriteBatch _spriteBatch;
     private readonly Texture2D _pixel;
     private readonly TextureCache _textureCache;
+    private RenderTarget2D _gameRenderTarget;
     private readonly Dictionary<IScene, SceneAssets> _sceneAssets = new();
     private SpriteMapData? _currentSmData;
     private bool _isDrawing;
@@ -45,7 +47,7 @@ public class GameOrchestrator : IDisposable
         _audioManager = new AudioManager(
             musicDirectory ?? throw new ArgumentNullException(nameof(musicDirectory)));
         _sfxDirectory = sfxDirectory ?? throw new ArgumentNullException(nameof(sfxDirectory));
-        ArgumentNullException.ThrowIfNull(texturesDirectory, nameof(texturesDirectory));
+        _texturesDirectory = texturesDirectory ?? throw new ArgumentNullException(nameof(texturesDirectory));
         _inputManager = inputManager ?? new InputManager(bindings ?? InputBindings.Default, btnpConfig);
 
         ArgumentNullException.ThrowIfNull(defaultScene);
@@ -91,6 +93,9 @@ public class GameOrchestrator : IDisposable
             },
             onSceneRemoved: RemoveSceneAssets);
 
+        var (rtW, rtH) = _sceneManager.TopResolution;
+        _gameRenderTarget = CreateGameRenderTarget(rtW, rtH);
+
         _mathManager = new MathManager();
         _memoryManager = null; // TODO
 
@@ -118,9 +123,11 @@ public class GameOrchestrator : IDisposable
 
         if (scene.SpritesPath is not null && scene.MapPath is not null)
         {
-            using var spriteStream = File.OpenRead(scene.SpritesPath);
+            var spritesFullPath = Path.Combine(_texturesDirectory, scene.SpritesPath + ".png");
+            var mapFullPath     = Path.Combine(_texturesDirectory, scene.MapPath + ".png");
+            using var spriteStream = File.OpenRead(spritesFullPath);
             spriteTexture = Texture2D.FromStream(_graphicsDevice, spriteStream);
-            using var mapStream = File.OpenRead(scene.MapPath);
+            using var mapStream = File.OpenRead(mapFullPath);
             mapTexture = Texture2D.FromStream(_graphicsDevice, mapStream);
             flagString = scene.FlagData is not null ? File.ReadAllText(scene.FlagData) : "";
         }
@@ -183,7 +190,6 @@ public class GameOrchestrator : IDisposable
     {
         if (_isDrawing) return;
         _isDrawing = true;
-        _graphicsDevice.Clear(Color.Black);
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend,
             SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
     }
@@ -201,12 +207,51 @@ public class GameOrchestrator : IDisposable
 
     public void Draw(TimeSpan elapsed)
     {
+        var (resW, resH) = _sceneManager.TopResolution;
+        if (_gameRenderTarget.Width != resW || _gameRenderTarget.Height != resH)
+        {
+            _gameRenderTarget.Dispose();
+            _gameRenderTarget = CreateGameRenderTarget(resW, resH);
+        }
+
+        _graphicsDevice.SetRenderTarget(_gameRenderTarget);
         BeginFrame();
         _sceneManager.InternalDraw(elapsed);
         EndFrame();
+        _graphicsDevice.SetRenderTarget(null);
+
+        PresentGameToScreen();
+
         _textureCache.Tick();
         foreach (var assets in _sceneAssets.Values)
             assets.TextureManager.Tick();
+    }
+
+    private RenderTarget2D CreateGameRenderTarget(int w, int h)
+        => new RenderTarget2D(_graphicsDevice, w, h, false,
+            SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+
+    private void PresentGameToScreen()
+    {
+        var pp = _graphicsDevice.PresentationParameters;
+        int windowW = pp.BackBufferWidth;
+        int windowH = pp.BackBufferHeight;
+        int rtW = _gameRenderTarget.Width;
+        int rtH = _gameRenderTarget.Height;
+
+        int scale = Math.Max(1, Math.Min(windowW / rtW, windowH / rtH));
+        int scaledW = rtW * scale;
+        int scaledH = rtH * scale;
+        int offsetX = (windowW - scaledW) / 2;
+        int offsetY = (windowH - scaledH) / 2;
+
+        _graphicsDevice.Clear(Color.Black);
+        _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque,
+            SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
+        _spriteBatch.Draw(_gameRenderTarget,
+            new Rectangle(offsetX, offsetY, scaledW, scaledH),
+            Color.White);
+        _spriteBatch.End();
     }
 
     public void ApplyInputSettings(InputBindings bindings, BtnpConfig? btnpConfig = null)
@@ -237,6 +282,14 @@ public class GameOrchestrator : IDisposable
         _audioManager.SetActiveSoundtrack(activeSoundtrack);
     }
 
+    public void LoadSfxPacks(IReadOnlyList<SfxPack> sfxPacks, string activePack)
+    {
+        ArgumentNullException.ThrowIfNull(sfxPacks);
+        ArgumentNullException.ThrowIfNull(activePack);
+        _audioManager.SetSfxPacks(sfxPacks.ToList());
+        _audioManager.SetActiveSfxPack(activePack);
+    }
+
     public void Dispose()
     {
         foreach (var scene in _sceneAssets.Keys.ToList())
@@ -245,6 +298,7 @@ public class GameOrchestrator : IDisposable
         _spriteBatch.Dispose();
         _textureCache.Dispose();
         _audioManager.Dispose();
+        _gameRenderTarget.Dispose();
     }
 }
 

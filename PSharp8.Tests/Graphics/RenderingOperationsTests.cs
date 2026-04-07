@@ -423,16 +423,16 @@ public class RenderingOperationsTests(FnaFixture fixture) : GraphicsTestBase(fix
     }
 
     [Fact]
-    public void Spr_ScalesOutput_WithViewportCellSize()
+    public void Spr_DrawsAtNativeSize_RegardlessOfCellResolution()
     {
         var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
-        // Target 16×16 with cellResolution 8×8 → 2× scale
+        // Sprite is 8×8 — draws at native 8×8 coords in a 16×16 target (no GraphicsManager scaling)
         var pixels = RenderToTarget(16, 16, Black, gm =>
-            gm.Spr(0, 0, 0), pm: pm, stm: stm,
-            cellResolution: (8, 8));
+            gm.Spr(0, 0, 0), pm: pm, stm: stm);
 
         pixels[0].Should().Be(DarkBlue);
-        pixels[15 * 16 + 15].Should().Be(DarkBlue); // sprite fills entire 16×16
+        pixels[7 * 16 + 7].Should().Be(DarkBlue); // last pixel of 8×8 sprite
+        pixels[8].Should().Be(Black);              // outside sprite width
     }
 
     [Fact]
@@ -650,16 +650,16 @@ public class RenderingOperationsTests(FnaFixture fixture) : GraphicsTestBase(fix
     }
 
     [Fact]
-    public void Sspr_ScalesOutput_WithViewportCellSize()
+    public void Sspr_DrawsAtDestSize_RegardlessOfCellResolution()
     {
         var (stm, pm, _) = BuildSpriteSetup(sheetW: 8, sheetH: 8, fillColor: DarkBlue);
-        // Target 16×16 with cellResolution 8×8 → 2× viewport scale
+        // Source 8×8 → dest 8×8, draws at native dest size in a 16×16 target
         var pixels = RenderToTarget(16, 16, Black, gm =>
-            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8), pm: pm, stm: stm,
-            cellResolution: (8, 8));
+            gm.Sspr(0, 0, 8, 8, 0, 0, 8, 8), pm: pm, stm: stm);
 
         pixels[0].Should().Be(DarkBlue);
-        pixels[15 * 16 + 15].Should().Be(DarkBlue);  // fills entire 16×16
+        pixels[7 * 16 + 7].Should().Be(DarkBlue); // last pixel of 8×8 dest region
+        pixels[8].Should().Be(Black);              // outside dest width
     }
 
     [Fact]
