@@ -28,6 +28,7 @@ public class GameOrchestrator : IDisposable
     private readonly TextureCache _textureCache;
     private readonly Dictionary<IScene, SceneAssets> _sceneAssets = new();
     private SpriteMapData? _currentSmData;
+    private bool _isDrawing;
 
     public GameOrchestrator(
         string musicDirectory,
@@ -177,13 +178,32 @@ public class GameOrchestrator : IDisposable
         _audioManager.Update(elapsed);
     }
 
-    public void Draw(TimeSpan elapsed)
+    /// <summary>Start a draw frame (idempotent: no-op if already in a frame).</summary>
+    public void BeginFrame()
     {
+        if (_isDrawing) return;
+        _isDrawing = true;
         _graphicsDevice.Clear(Color.Black);
         _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend,
             SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
-        _sceneManager.InternalDraw(elapsed);
+    }
+
+    /// <summary>End the current draw frame (no-op if not in a frame).</summary>
+    public void EndFrame()
+    {
+        if (!_isDrawing) return;
+        _isDrawing = false;
         _spriteBatch.End();
+    }
+
+    /// <summary>True while a draw frame is active (between BeginFrame and EndFrame).</summary>
+    public bool IsDrawing => _isDrawing;
+
+    public void Draw(TimeSpan elapsed)
+    {
+        BeginFrame();
+        _sceneManager.InternalDraw(elapsed);
+        EndFrame();
         _textureCache.Tick();
         foreach (var assets in _sceneAssets.Values)
             assets.TextureManager.Tick();

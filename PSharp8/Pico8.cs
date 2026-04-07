@@ -52,6 +52,19 @@ public static class Pico8
         { new(0xFF, 0x9D, 0x81, 255), new(0xFF, 0x9D, 0x81, 255) }, // 31 peach
     };
 
+    #region DRAW FRAME API
+
+    /// <summary>Start a draw frame (idempotent). Must be matched with EndFrame().</summary>
+    public static void BeginFrame() => Orch.BeginFrame();
+
+    /// <summary>End the current draw frame (no-op if none active).</summary>
+    public static void EndFrame() => Orch.EndFrame();
+
+    /// <summary>True while a draw frame is active.</summary>
+    public static bool IsDrawing => Orch.IsDrawing;
+
+    #endregion
+
     #region INPUT API
 
     /// <summary>

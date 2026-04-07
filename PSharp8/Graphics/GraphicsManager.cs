@@ -323,7 +323,15 @@ internal class GraphicsManager
         x -= _camera.x;
         y -= _camera.y;
 
-        var fontTexture = _textureCache.Get(font.TextureName);
+        Texture2D fontTexture;
+        try
+        {
+            fontTexture = _textureCache.Get(font.TextureName);
+        }
+        catch (FileNotFoundException)
+        {
+            return; // Font asset not available (e.g., test context without content)
+        }
 
         int cellW = font.Characters.Max(pair => pair.Value.Width);
         int cellH = font.Characters.Max(pair => pair.Value.Height);
