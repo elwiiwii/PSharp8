@@ -40,7 +40,7 @@ internal class AudioManager : IDisposable
     internal void Music(int n, int fadeMs)
     {
         if (_activeSoundtrack is null)
-            throw new InvalidOperationException("No active soundtrack set.");
+            return;
 
         if (n >= 0 && n >= _activeSoundtrack.Tracks.Count)
             throw new ArgumentOutOfRangeException(nameof(n));
@@ -107,7 +107,7 @@ internal class AudioManager : IDisposable
     internal void Sfx(int n)
     {
         if (_activeSfxPack is null)
-            throw new InvalidOperationException("No active SFX pack set.");
+            return;
 
         var key = _activeSfxPack.Prefix + n;
         if (!_sfxDictionary.TryGetValue(key, out var soundEffect))

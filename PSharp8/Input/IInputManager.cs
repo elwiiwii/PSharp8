@@ -1,6 +1,6 @@
 namespace PSharp8.Input;
 
-internal interface IInputManager
+public interface IInputManager
 {
     bool Btn(int button, int player);
     bool Btnp(int button, int player);

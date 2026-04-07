@@ -16,7 +16,7 @@ public class GameOrchestrator : IDisposable
     private readonly string _sfxDirectory;
     private readonly AudioManager _audioManager;
     private readonly GraphicsManager _graphicsManager;
-    private readonly InputManager _inputManager;
+    private readonly IInputManager _inputManager;
     private readonly MathManager _mathManager;
     private readonly MemoryManager? _memoryManager; // TODO
     private readonly SceneManager _sceneManager;
@@ -38,13 +38,14 @@ public class GameOrchestrator : IDisposable
         GraphicsDeviceManager graphicsDeviceManager,
         GameWindow window,
         InputBindings? bindings = null,
-        BtnpConfig? btnpConfig = null)
+        BtnpConfig? btnpConfig = null,
+        IInputManager? inputManager = null)
     {
         _audioManager = new AudioManager(
             musicDirectory ?? throw new ArgumentNullException(nameof(musicDirectory)));
         _sfxDirectory = sfxDirectory ?? throw new ArgumentNullException(nameof(sfxDirectory));
         ArgumentNullException.ThrowIfNull(texturesDirectory, nameof(texturesDirectory));
-        _inputManager = new InputManager(bindings ?? InputBindings.Default, btnpConfig);
+        _inputManager = inputManager ?? new InputManager(bindings ?? InputBindings.Default, btnpConfig);
 
         ArgumentNullException.ThrowIfNull(defaultScene);
         ArgumentNullException.ThrowIfNull(graphicsDevice);
@@ -97,7 +98,7 @@ public class GameOrchestrator : IDisposable
 
     internal AudioManager AudioManager => _audioManager;
     internal GraphicsManager GraphicsManager => _graphicsManager;
-    internal InputManager InputManager => _inputManager;
+    internal IInputManager InputManager => _inputManager;
     internal MathManager MathManager => _mathManager;
     internal MemoryManager MemoryManager => _memoryManager!;
     internal SceneManager SceneManager => _sceneManager;
@@ -192,8 +193,8 @@ public class GameOrchestrator : IDisposable
     {
         ArgumentNullException.ThrowIfNull(bindings);
         _inputManager.SetBindings(bindings);
-        if (btnpConfig is not null)
-            _inputManager.UpdateConfig(btnpConfig);
+        if (btnpConfig is not null && _inputManager is InputManager realManager)
+            realManager.UpdateConfig(btnpConfig);
     }
 
     public void ApplyAudioSettings(int musicVolume, int sfxVolume)
