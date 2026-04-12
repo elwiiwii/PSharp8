@@ -485,16 +485,20 @@ public class DrawingPrimitivesTests(FnaFixture fixture) : GraphicsTestBase(fixtu
     [Fact]
     public void Rrect_DrawsHollowRectangleOutline_WhenRadiusIsZero()
     {
-        // r=0: rrect behaves like a plain rect outline.
+        // r=0 → cornerRadius=1: corners are clipped by 1 pixel.
         // Box at (2,2), 9-wide × 7-tall → right edge x=10, bottom edge y=8.
         var pixels = RenderToTarget(20, 20, Black, gm =>
             gm.Rrect(2, 2, 9, 7, 0, Red));
 
-        // All four corners included (no clipping at r=0)
-        pixels[2 * 20 +  2].Should().Be(Red); // top-left     (2,2)
-        pixels[2 * 20 + 10].Should().Be(Red); // top-right    (10,2)
-        pixels[8 * 20 +  2].Should().Be(Red); // bottom-left  (2,8)
-        pixels[8 * 20 + 10].Should().Be(Red); // bottom-right (10,8)
+        // Corners clipped (cornerRadius=1)
+        pixels[2 * 20 +  2].Should().Be(Black); // top-left     (2,2) — clipped
+        pixels[2 * 20 + 10].Should().Be(Black); // top-right    (10,2) — clipped
+        pixels[8 * 20 +  2].Should().Be(Black); // bottom-left  (2,8) — clipped
+        pixels[8 * 20 + 10].Should().Be(Black); // bottom-right (10,8) — clipped
+
+        // Arc pixels adjacent to top-left corner (arc center (3,3), r=1)
+        pixels[3 * 20 +  2].Should().Be(Red);   // (2,3) — left arc pixel
+        pixels[2 * 20 +  3].Should().Be(Red);   // (3,2) — top arc pixel
 
         // Edge midpoints
         pixels[2 * 20 +  6].Should().Be(Red); // top midpoint
@@ -510,20 +514,20 @@ public class DrawingPrimitivesTests(FnaFixture fixture) : GraphicsTestBase(fixtu
     [Fact]
     public void Rrect_CutsCorners_WhenRadiusIsTwo()
     {
-        // Box at (2,2), 9-wide × 7-tall, r=2.
-        // Straight edges: top x∈[4..8] at y=2; left y∈[4..6] at x=2.
-        // Arc pixels (midpoint iter1 dx=2,dy=0): top-left arc hits (4,2) and (2,4).
+        // Box at (2,2), 9-wide × 7-tall, r=2 → cornerRadius=3.
+        // Straight edges: top x∈[5..7] at y=2; left y=5 at x=2.
+        // Arc center top-left at (5,5), r=3. Step (3,1) hits (4,2) and (2,4).
         var pixels = RenderToTarget(20, 20, Black, gm =>
             gm.Rrect(2, 2, 9, 7, 2, Red));
 
-        // Straight top edge
-        pixels[2 * 20 + 4].Should().Be(Red); // (4,2) — start of top straight edge
-        pixels[2 * 20 + 6].Should().Be(Red); // (6,2) — midpoint of top edge
-        pixels[2 * 20 + 8].Should().Be(Red); // (8,2) — end of top straight edge
+        // Top edge pixels (straight x∈[5..7] plus arc pixels at x=4 and x=8)
+        pixels[2 * 20 + 4].Should().Be(Red); // (4,2) — arc pixel step (3,1) at top-left
+        pixels[2 * 20 + 6].Should().Be(Red); // (6,2) — midpoint of top straight edge
+        pixels[2 * 20 + 8].Should().Be(Red); // (8,2) — arc pixel step (3,1) at top-right
 
-        // Arc pixels from top-left corner (arc center at (4,4), r=2)
-        pixels[4 * 20 + 2].Should().Be(Red); // (2,4) — leftmost arc pixel
-        pixels[3 * 20 + 2].Should().Be(Red); // (2,3) — arc pixel iter2
+        // Arc pixels from top-left corner (arc center at (5,5), r=3)
+        pixels[4 * 20 + 2].Should().Be(Red);  // (2,4) — leftmost arc pixel step (3,1)
+        pixels[3 * 20 + 2].Should().Be(Black); // (2,3) — outside arc range with cornerRadius=3
 
         // Corners must be clipped (unpainted)
         pixels[2 * 20 +  2].Should().Be(Black); // (2,2)  top-left corner
@@ -550,15 +554,18 @@ public class DrawingPrimitivesTests(FnaFixture fixture) : GraphicsTestBase(fixtu
     [Fact]
     public void Rrect_AppliesCameraOffset()
     {
-        // Camera(2,0): Rrect(7,3,9,7,0) → screen top-left (5,3), top-right (13,3).
+        // Camera(2,0): Rrect(7,3,9,7,0) → screen box x∈[5..13], y∈[3..9].
+        // r=0 → cornerRadius=1: top edge drawn at x∈[6..12] y=3; corners clipped.
         var pixels = RenderToTarget(20, 20, Black, gm =>
         {
             gm.Camera(2, 0);
             gm.Rrect(7, 3, 9, 7, 0, Red);
         });
 
-        pixels[3 * 20 +  5].Should().Be(Red);   // (5,3) — camera-adjusted top-left
-        pixels[3 * 20 + 13].Should().Be(Red);   // (13,3) — camera-adjusted top-right
+        pixels[3 * 20 +  5].Should().Be(Black); // (5,3) — top-left corner clipped
+        pixels[3 * 20 +  6].Should().Be(Red);   // (6,3) — first painted top-edge pixel
+        pixels[3 * 20 + 12].Should().Be(Red);   // (12,3) — last painted top-edge pixel
+        pixels[3 * 20 + 13].Should().Be(Black); // (13,3) — top-right corner clipped
         pixels[3 * 20 + 14].Should().Be(Black); // (14,3) — one past right edge
     }
 
@@ -590,18 +597,18 @@ public class DrawingPrimitivesTests(FnaFixture fixture) : GraphicsTestBase(fixtu
     [Fact]
     public void Rrectfill_FillsEntireRectangle_WhenRadiusIsZero()
     {
-        // r=0 → middle band covers full area; corner loop still runs but only
-        // repaints already-covered rows. All cells x∈[2..10], y∈[2..8] must be Red.
+        // r=0 → cornerRadius=1: middle band covers y∈[3..7]; top/bottom rows not painted.
+        // All cells x∈[2..10], y∈[3..7] are Red; y=2 and y=8 are clipped.
         var pixels = RenderToTarget(20, 20, Black, gm =>
             gm.Rrectfill(2, 2, 9, 7, 0, Red));
 
-        // All four corners included — no clipping at r=0
-        pixels[2 * 20 +  2].Should().Be(Red); // top-left     (2,2)
-        pixels[2 * 20 + 10].Should().Be(Red); // top-right    (10,2)
-        pixels[8 * 20 +  2].Should().Be(Red); // bottom-left  (2,8)
-        pixels[8 * 20 + 10].Should().Be(Red); // bottom-right (10,8)
+        // Corners clipped (cornerRadius=1)
+        pixels[2 * 20 +  2].Should().Be(Black); // top-left     (2,2) — clipped
+        pixels[2 * 20 + 10].Should().Be(Black); // top-right    (10,2) — clipped
+        pixels[8 * 20 +  2].Should().Be(Black); // bottom-left  (2,8) — clipped
+        pixels[8 * 20 + 10].Should().Be(Black); // bottom-right (10,8) — clipped
 
-        // Interior
+        // Interior (middle band)
         pixels[5 * 20 + 6].Should().Be(Red);
 
         // Just outside
@@ -612,19 +619,25 @@ public class DrawingPrimitivesTests(FnaFixture fixture) : GraphicsTestBase(fixtu
     [Fact]
     public void Rrectfill_FillsDiscWithClippedCorners_WhenRadiusIsTwo()
     {
-        // Box at (2,2), 9-wide × 7-tall, r=2. tlx=4, trx=8, tly=4, bly=6.
-        // Middle band y∈[4..6] x∈[2..10] fully Red.
-        // Arc row y=2: iter1 draws x∈[4..8], iter2 draws x∈[3..9] → union x∈[3..9].
-        // Arc row y=3: full-width scanline x∈[2..10].
+        // Box at (2,2), 9-wide × 7-tall, r=2 → cornerRadius=3. Arc centers at (5,5)/(7,5).
+        // Middle band y=5 x∈[2..10] fully Red.
+        // Arc row y=2: narrow steps draw x∈[5..7] and x∈[4..8] → union x∈[4..8].
+        // Arc row y=3: wide step (2,2) draws x∈[3..9].
+        // Arc row y=4: wide step (3,1) draws x∈[2..10].
         var pixels = RenderToTarget(20, 20, Black, gm =>
             gm.Rrectfill(2, 2, 9, 7, 2, Red));
 
-        pixels[5 * 20 +  5].Should().Be(Red); // centre         (5,5)
-        pixels[4 * 20 +  2].Should().Be(Red); // middle-band left edge (2,4)
-        pixels[4 * 20 + 10].Should().Be(Red); // middle-band right edge (10,4)
-        pixels[3 * 20 +  2].Should().Be(Red); // full-width arc row (2,3)
-        pixels[2 * 20 +  3].Should().Be(Red); // narrow arc row start (3,2)
-        pixels[2 * 20 +  9].Should().Be(Red); // narrow arc row end (9,2)
+        pixels[5 * 20 +  5].Should().Be(Red);  // centre                  (5,5)
+        pixels[4 * 20 +  2].Should().Be(Red);  // wide arc row left edge  (2,4)
+        pixels[4 * 20 + 10].Should().Be(Red);  // wide arc row right edge (10,4)
+        pixels[3 * 20 +  3].Should().Be(Red);  // wide arc row start      (3,3)
+        pixels[2 * 20 +  4].Should().Be(Red);  // narrow arc row start    (4,2)
+        pixels[2 * 20 +  8].Should().Be(Red);  // narrow arc row end      (8,2)
+
+        // Outside the arc ranges
+        pixels[3 * 20 +  2].Should().Be(Black); // (2,3) — outside wide arc row (starts at x=3)
+        pixels[2 * 20 +  3].Should().Be(Black); // (3,2) — outside narrow arc row (starts at x=4)
+        pixels[2 * 20 +  9].Should().Be(Black); // (9,2) — outside narrow arc row (ends at x=8)
 
         // Corners clipped
         pixels[2 * 20 +  2].Should().Be(Black); // (2,2)  top-left corner
@@ -649,15 +662,18 @@ public class DrawingPrimitivesTests(FnaFixture fixture) : GraphicsTestBase(fixtu
     [Fact]
     public void Rrectfill_AppliesCameraOffset()
     {
-        // Camera(2,0): Rrectfill(7,3,9,7,0) → solid block screen x∈[5..13], y∈[3..9].
+        // Camera(2,0): Rrectfill(7,3,9,7,0) → screen box x∈[5..13], y∈[3..9].
+        // r=0 → cornerRadius=1: middle band covers y∈[4..8]; top row y=3 and bottom row y=9 not painted.
         var pixels = RenderToTarget(20, 20, Black, gm =>
         {
             gm.Camera(2, 0);
             gm.Rrectfill(7, 3, 9, 7, 0, Red);
         });
 
-        pixels[3 * 20 +  5].Should().Be(Red);   // (5,3)  — camera-adjusted top-left
-        pixels[9 * 20 + 13].Should().Be(Red);   // (13,9) — camera-adjusted bottom-right
+        pixels[3 * 20 +  5].Should().Be(Black); // (5,3)  — top row not painted (clipped)
+        pixels[9 * 20 + 13].Should().Be(Black); // (13,9) — bottom row not painted (clipped)
+        pixels[4 * 20 +  5].Should().Be(Red);   // (5,4)  — first row of middle band
+        pixels[8 * 20 + 13].Should().Be(Red);   // (13,8) — last row of middle band, right edge
         pixels[3 * 20 +  4].Should().Be(Black); // (4,3)  — one left of left edge
         pixels[3 * 20 + 14].Should().Be(Black); // (14,3) — one past right edge
     }

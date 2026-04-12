@@ -196,7 +196,7 @@ internal class GraphicsManager
 
         var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
 
-        int cornerRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
+        int cornerRadius = Math.Clamp(radius + 1, 0, Math.Min(width, height) / 2);
 
         // Straight edges (shortened by cornerRadius on each end)
         int straightEdgeWidth  = width  - 2 * cornerRadius;
@@ -243,7 +243,7 @@ internal class GraphicsManager
         
         var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
 
-        int cornerRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
+        int cornerRadius = Math.Clamp(radius + 1, 0, Math.Min(width, height) / 2);
 
         // Middle band — full width, between the two corner bands
         int middleBandHeight = height - 2 * cornerRadius;

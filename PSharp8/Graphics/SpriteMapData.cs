@@ -218,8 +218,8 @@ internal class SpriteMapData
                 break;
 
             int tile = _mapData[mapIndex];
-            int splitValue = (pixelOffset % 2 == 0) ? (tile / @base) : (tile % @base);
-            Color color = Pico8.BasePalette.ElementAt(splitValue % 16).Key;
+            int splitValue = (pixelOffset % 2 == 0) ? (tile % @base) : (tile / @base);
+            Color color = Pico8.BasePalette.ElementAt(splitValue % @base).Key;
             _spritesheetData[spriteIndex] = color;
             pixelsWritten++;
         }
@@ -263,8 +263,8 @@ internal class SpriteMapData
                 break;
 
             int tile = _mapData[sourceCellX + (sourceCellY * _mapWidth)];
-            int splitValue = (i % 2 == 0) ? (tile / @base) : (tile % @base);
-            Color color = Pico8.BasePalette.ElementAt(splitValue % 16).Key;
+            int splitValue = (i % 2 == 0) ? (tile % @base) : (tile / @base);
+            Color color = Pico8.BasePalette.ElementAt(splitValue % @base).Key;
             _spritesheetData[destinationX + (destinationY * _spriteSheetWidth)] = color;
             pixelsWritten++;
         }

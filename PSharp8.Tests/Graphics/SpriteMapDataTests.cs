@@ -389,7 +389,7 @@ public class SpriteMapDataTests(FnaFixture fixture) : GraphicsTestBase(fixture)
     {
         var data = MakeDefault();
         // MakeDefault gives a 16×16 spritesheet → 4 sprites (indices 0–3).
-        // Set tile 0,0 to sprite 3 → high nibble = 3/16 = 0, low nibble = 3%16 = 3
+        // Set tile 0,0 to sprite 3 → low nibble = 3%16 = 3, high nibble = 3/16 = 0
         data.SetMapTile(0, 0, 3);
         int spritesheetVBefore = data.SpritesheetVersion;
 
@@ -397,12 +397,12 @@ public class SpriteMapDataTests(FnaFixture fixture) : GraphicsTestBase(fixture)
         data.MapToSpritesheet1D(cellX: 0, cellY: 0, destX: 0, destY: 0, length: 2, @base: 16);
 
         data.SpritesheetVersion.Should().BeGreaterThan(spritesheetVBefore);
-        // Pixel 0 (even offset): 3/16=0  → palette[0]
-        // Pixel 1 (odd offset):  3%16=3  → palette[3]
+        // Pixel 0 (even offset): 3%16=3  → palette[3]
+        // Pixel 1 (odd offset):  3/16=0  → palette[0]
         Color pal0 = Pico8.BasePalette.ElementAt(0).Key;
         Color pal3 = Pico8.BasePalette.ElementAt(3).Key;
-        data.GetSpritePixel(0, 0).Should().Be(pal0);
-        data.GetSpritePixel(1, 0).Should().Be(pal3);
+        data.GetSpritePixel(0, 0).Should().Be(pal3);
+        data.GetSpritePixel(1, 0).Should().Be(pal0);
     }
 
     [Fact]
@@ -429,7 +429,7 @@ public class SpriteMapDataTests(FnaFixture fixture) : GraphicsTestBase(fixture)
         var map    = MakeSolid(128, 8, DarkBlue);
         var data = new SpriteMapData(sprite, map, "");
         // cellY=0 is the only valid map row; tile 3 is within the 256-sprite range
-        data.SetMapTile(0, 0, 3); // high nibble 3/16=0, low nibble 3%16=3
+        data.SetMapTile(0, 0, 3); // low nibble 3%16=3, high nibble 3/16=0
         int vBefore = data.SpritesheetVersion;
 
         data.MapToSpritesheet2D(
@@ -440,8 +440,8 @@ public class SpriteMapDataTests(FnaFixture fixture) : GraphicsTestBase(fixture)
         data.SpritesheetVersion.Should().BeGreaterThan(vBefore);
         Color pal0 = Pico8.BasePalette.ElementAt(0).Key;
         Color pal3 = Pico8.BasePalette.ElementAt(3).Key;
-        data.GetSpritePixel(0, 64).Should().Be(pal0);
-        data.GetSpritePixel(1, 64).Should().Be(pal3);
+        data.GetSpritePixel(0, 64).Should().Be(pal3);
+        data.GetSpritePixel(1, 64).Should().Be(pal0);
     }
 
     [Fact]
