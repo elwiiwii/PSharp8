@@ -173,7 +173,7 @@ public class PaletteManagerTests
     // -------------------------------------------------------------------------
 
     [Fact]
-    public void ResetTransparency_SetsAllMappedAlphasTo255()
+    public void ResetTransparency_SetsAllMappedAlphasTo255ExceptBlack()
     {
         var pm = new PaletteManager();
         pm.SetTransparency(DarkBlue, 0);
@@ -181,8 +181,13 @@ public class PaletteManagerTests
 
         pm.ResetTransparency();
 
-        foreach (var value in pm.PaletteMap.Values)
-            value.A.Should().Be(255, because: "ResetTransparency should restore full opacity for every entry");
+        foreach (var (key, value) in pm.PaletteMap)
+        {
+            if (key == Color.Black)
+                value.A.Should().Be(0, because: "black should remain transparent after ResetTransparency");
+            else
+                value.A.Should().Be(255, because: $"palette entry {key} should be fully opaque after ResetTransparency");
+        }
     }
 
     [Fact]

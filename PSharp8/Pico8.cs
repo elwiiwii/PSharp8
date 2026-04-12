@@ -196,13 +196,13 @@ public static class Pico8
         => Orch.GraphicsManager.Palt();
 
     public static void Palt(double index, bool isTransparent)
-        => Orch.GraphicsManager.Palt(BasePalette.ElementAt((int)index).Key, isTransparent ? 255 : 0);
+        => Orch.GraphicsManager.Palt(BasePalette.ElementAt((int)index).Key, isTransparent ? 0 : 255);
 
     public static void Palt(double index, double opacity)
         => Orch.GraphicsManager.Palt(BasePalette.ElementAt((int)index).Key, (int)opacity);
 
     public static void Palt(F32 index, bool isTransparent)
-        => Orch.GraphicsManager.Palt(BasePalette.ElementAt(F32.FloorToInt(index)).Key, isTransparent ? 255 : 0);
+        => Orch.GraphicsManager.Palt(BasePalette.ElementAt(F32.FloorToInt(index)).Key, isTransparent ? 0 : 255);
 
     public static void Palt(F32 index, F32 opacity)
         => Orch.GraphicsManager.Palt(BasePalette.ElementAt(F32.FloorToInt(index)).Key, F32.FloorToInt(opacity));
@@ -553,11 +553,11 @@ public static class Pico8
     /// <summary>
     /// https://pico-8.fandom.com/wiki/Srand
     /// </summary>
-    public static void Srand(double seed, Random? random = null)
-        => Orch.MathManager.Srand(F32.FromDouble(seed), random);
+    public static void Srand(double seed)
+        => Orch.MathManager.Srand(F32.FromDouble(seed));
 
-    public static void Srand(F32 seed, Random? random = null)
-        => Orch.MathManager.Srand(seed, random);
+    public static void Srand(F32 seed)
+        => Orch.MathManager.Srand(seed);
 
     #endregion
 

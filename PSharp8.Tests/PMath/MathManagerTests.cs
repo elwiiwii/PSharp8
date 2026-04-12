@@ -230,7 +230,7 @@ public sealed class MathManagerTests
     {
         for (int i = 0; i < 100; i++)
         {
-            var result = _sut.Rnd(F32.One, null);
+            var result = _sut.Rnd(F32.One, Random.Shared);
             result.Double.Should().BeGreaterThanOrEqualTo(0.0).And.BeLessThan(1.0);
         }
     }
@@ -240,7 +240,7 @@ public sealed class MathManagerTests
     {
         for (int i = 0; i < 100; i++)
         {
-            var result = _sut.Rnd(F32.FromDouble(5), null);
+            var result = _sut.Rnd(F32.FromDouble(5), Random.Shared);
             result.Double.Should().BeGreaterThanOrEqualTo(0.0).And.BeLessThan(5.0);
         }
     }
@@ -254,14 +254,14 @@ public sealed class MathManagerTests
     [Fact]
     public void Srand_ProducesDeterministicSequence_GivenSameSeed()
     {
-        _sut.Srand(F32.FromDouble(42), (Random?)null);
+        _sut.Srand(F32.FromDouble(42));
         var first = Enumerable.Range(0, 5)
-            .Select(_ => _sut.Rnd(F32.One, null).Double)
+            .Select(_ => _sut.Rnd(F32.One).Double)
             .ToList();
 
-        _sut.Srand(F32.FromDouble(42), (Random?)null);
+        _sut.Srand(F32.FromDouble(42));
         var second = Enumerable.Range(0, 5)
-            .Select(_ => _sut.Rnd(F32.One, null).Double)
+            .Select(_ => _sut.Rnd(F32.One).Double)
             .ToList();
 
         first.Should().Equal(second);

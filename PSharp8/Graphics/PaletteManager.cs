@@ -15,6 +15,19 @@ internal class PaletteManager
     internal Dictionary<Color, Color> PaletteMap => _paletteMap;
     internal int PaletteVersion => _paletteVersion;
 
+    internal Color GetMappedColor(Color color, bool ignoreTransparency = false)
+    {
+        if (_paletteMap.TryGetValue(color, out var mapped))
+        {
+            if (ignoreTransparency)
+                mapped.A = 255;
+            return mapped;
+        }
+        if (ignoreTransparency)
+            color.A = 255;
+        return color;
+    }
+
 //    public void SetPalette(int index, Color value)
 //    {
 //        if (index < 0 || index >= _paletteMap.Count)
@@ -59,7 +72,9 @@ internal class PaletteManager
 
     internal void ResetTransparency()
     {
-        for (int i = 0; i < _paletteMap.Count; i++)
+        _paletteMap[Color.Black] = new(0x00, 0x00, 0x00, 0);
+
+        for (int i = 1; i < _paletteMap.Count; i++)
         {
             Color key = _paletteMap.ElementAt(i).Key;
             Color value = _paletteMap[key];

@@ -55,16 +55,18 @@ internal class GraphicsManager
         centerX -= _camera.x;
         centerY -= _camera.y;
 
+        var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
+
         IterateMidpointArc(radius, (dx, dy) =>
         {
-            DrawScaledPixel(centerX + dx, centerY + dy, color, 1, 1);
-            DrawScaledPixel(centerX + dy, centerY + dx, color, 1, 1);
-            DrawScaledPixel(centerX - dy, centerY + dx, color, 1, 1);
-            DrawScaledPixel(centerX - dx, centerY + dy, color, 1, 1);
-            DrawScaledPixel(centerX - dx, centerY - dy, color, 1, 1);
-            DrawScaledPixel(centerX - dy, centerY - dx, color, 1, 1);
-            DrawScaledPixel(centerX + dy, centerY - dx, color, 1, 1);
-            DrawScaledPixel(centerX + dx, centerY - dy, color, 1, 1);
+            DrawScaledPixel(centerX + dx, centerY + dy, mapped, 1, 1);
+            DrawScaledPixel(centerX + dy, centerY + dx, mapped, 1, 1);
+            DrawScaledPixel(centerX - dy, centerY + dx, mapped, 1, 1);
+            DrawScaledPixel(centerX - dx, centerY + dy, mapped, 1, 1);
+            DrawScaledPixel(centerX - dx, centerY - dy, mapped, 1, 1);
+            DrawScaledPixel(centerX - dy, centerY - dx, mapped, 1, 1);
+            DrawScaledPixel(centerX + dy, centerY - dx, mapped, 1, 1);
+            DrawScaledPixel(centerX + dx, centerY - dy, mapped, 1, 1);
         });
     }
 
@@ -78,12 +80,14 @@ internal class GraphicsManager
         centerX -= _camera.x;
         centerY -= _camera.y;
 
+        var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
+
         IterateMidpointArc(radius, (dx, dy) =>
         {
-            DrawScaledPixel(centerX - dx, centerY + dy, color, 2 * dx + 1, 1);
-            DrawScaledPixel(centerX - dx, centerY - dy, color, 2 * dx + 1, 1);
-            DrawScaledPixel(centerX - dy, centerY + dx, color, 2 * dy + 1, 1);
-            DrawScaledPixel(centerX - dy, centerY - dx, color, 2 * dy + 1, 1);
+            DrawScaledPixel(centerX - dx, centerY + dy, mapped, 2 * dx + 1, 1);
+            DrawScaledPixel(centerX - dx, centerY - dy, mapped, 2 * dx + 1, 1);
+            DrawScaledPixel(centerX - dy, centerY + dx, mapped, 2 * dy + 1, 1);
+            DrawScaledPixel(centerX - dy, centerY - dx, mapped, 2 * dy + 1, 1);
         });
     }
 
@@ -105,6 +109,8 @@ internal class GraphicsManager
         endX -= _camera.x;
         endY -= _camera.y;
 
+        var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
+
         bool horiz = Math.Abs(endX - startX) >= Math.Abs(endY - startY);
         int dx = startX <= endX ? 1 : -1;
         int dy = startY <= endY ? 1 : -1;
@@ -113,7 +119,7 @@ internal class GraphicsManager
 
         for (;;)
         {
-            DrawScaledPixel(x, y, color, 1, 1);
+            DrawScaledPixel(x, y, mapped, 1, 1);
 
             if (horiz)
             {
@@ -140,7 +146,9 @@ internal class GraphicsManager
         x -= _camera.x;
         y -= _camera.y;
 
-        DrawScaledPixel(x, y, color, 1, 1);
+        var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
+
+        DrawScaledPixel(x, y, mapped, 1, 1);
     }
 
     /// <summary>
@@ -153,10 +161,12 @@ internal class GraphicsManager
         xLeft -= _camera.x;
         yTop -= _camera.y;
 
-        DrawScaledPixel(xLeft, yTop, color, width, 1);
-        DrawScaledPixel(xLeft, yTop + height - 1, color, width, 1);
-        DrawScaledPixel(xLeft, yTop, color, 1, height);
-        DrawScaledPixel(xLeft + width - 1, yTop, color, 1, height);
+        var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
+
+        DrawScaledPixel(xLeft, yTop, mapped, width, 1);
+        DrawScaledPixel(xLeft, yTop + height - 1, mapped, width, 1);
+        DrawScaledPixel(xLeft, yTop, mapped, 1, height);
+        DrawScaledPixel(xLeft + width - 1, yTop, mapped, 1, height);
     }
 
     /// <summary>
@@ -169,7 +179,9 @@ internal class GraphicsManager
         xLeft -= _camera.x;
         yTop -= _camera.y;
 
-        DrawScaledPixel(xLeft, yTop, color, width, height);
+        var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
+
+        DrawScaledPixel(xLeft, yTop, mapped, width, height);
     }
 
     /// <summary>
@@ -182,6 +194,8 @@ internal class GraphicsManager
         x -= _camera.x;
         y -= _camera.y;
 
+        var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
+
         int cornerRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
 
         // Straight edges (shortened by cornerRadius on each end)
@@ -189,13 +203,13 @@ internal class GraphicsManager
         int straightEdgeHeight = height - 2 * cornerRadius;
         if (straightEdgeWidth > 0)
         {
-            DrawScaledPixel(x + cornerRadius, y,                color, straightEdgeWidth, 1);  // Top
-            DrawScaledPixel(x + cornerRadius, y + height - 1,   color, straightEdgeWidth, 1);  // Bottom
+            DrawScaledPixel(x + cornerRadius, y,                mapped, straightEdgeWidth, 1);  // Top
+            DrawScaledPixel(x + cornerRadius, y + height - 1,   mapped, straightEdgeWidth, 1);  // Bottom
         }
         if (straightEdgeHeight > 0)
         {
-            DrawScaledPixel(x,             y + cornerRadius, color, 1, straightEdgeHeight);  // Left
-            DrawScaledPixel(x + width - 1, y + cornerRadius, color, 1, straightEdgeHeight);  // Right
+            DrawScaledPixel(x,             y + cornerRadius, mapped, 1, straightEdgeHeight);  // Left
+            DrawScaledPixel(x + width - 1, y + cornerRadius, mapped, 1, straightEdgeHeight);  // Right
         }
 
         // Corner arc centers (one quadrant per corner via midpoint algorithm)
@@ -206,14 +220,14 @@ internal class GraphicsManager
 
         IterateMidpointArc(cornerRadius, (dx, dy) =>
         {
-            DrawScaledPixel(topLeftX     - dx, topLeftY     - dy, color);  // Top-left
-            DrawScaledPixel(topLeftX     - dy, topLeftY     - dx, color);
-            DrawScaledPixel(topRightX    + dx, topRightY    - dy, color);  // Top-right
-            DrawScaledPixel(topRightX    + dy, topRightY    - dx, color);
-            DrawScaledPixel(bottomLeftX  - dx, bottomLeftY  + dy, color);  // Bottom-left
-            DrawScaledPixel(bottomLeftX  - dy, bottomLeftY  + dx, color);
-            DrawScaledPixel(bottomRightX + dx, bottomRightY + dy, color);  // Bottom-right
-            DrawScaledPixel(bottomRightX + dy, bottomRightY + dx, color);
+            DrawScaledPixel(topLeftX     - dx, topLeftY     - dy, mapped);  // Top-left
+            DrawScaledPixel(topLeftX     - dy, topLeftY     - dx, mapped);
+            DrawScaledPixel(topRightX    + dx, topRightY    - dy, mapped);  // Top-right
+            DrawScaledPixel(topRightX    + dy, topRightY    - dx, mapped);
+            DrawScaledPixel(bottomLeftX  - dx, bottomLeftY  + dy, mapped);  // Bottom-left
+            DrawScaledPixel(bottomLeftX  - dy, bottomLeftY  + dx, mapped);
+            DrawScaledPixel(bottomRightX + dx, bottomRightY + dy, mapped);  // Bottom-right
+            DrawScaledPixel(bottomRightX + dy, bottomRightY + dx, mapped);
         });
     }
 
@@ -226,13 +240,15 @@ internal class GraphicsManager
 
         x -= _camera.x;
         y -= _camera.y;
+        
+        var mapped = _paletteManager.GetMappedColor(color, ignoreTransparency: true);
 
         int cornerRadius = Math.Clamp(radius, 0, Math.Min(width, height) / 2);
 
         // Middle band — full width, between the two corner bands
         int middleBandHeight = height - 2 * cornerRadius;
         if (middleBandHeight > 0)
-            DrawScaledPixel(x, y + cornerRadius, color, width, middleBandHeight);
+            DrawScaledPixel(x, y + cornerRadius, mapped, width, middleBandHeight);
 
         // Corner regions filled via horizontal scanlines using midpoint algorithm.
         int leftArcCenterX   = x + cornerRadius;
@@ -245,18 +261,18 @@ internal class GraphicsManager
             // Wide scanline: vertical offset dy, horizontal span covers 2*dx+1 cells
             int wideLeft  = leftArcCenterX - dx;
             int wideWidth = rightArcCenterX + dx - wideLeft + 1; // = width - 2*cornerRadius + 2*dx
-            DrawScaledPixel(wideLeft, topArcCenterY    - dy, color, wideWidth, 1);  // Top band
+            DrawScaledPixel(wideLeft, topArcCenterY    - dy, mapped, wideWidth, 1);  // Top band
             if (bottomArcCenterY + dy != topArcCenterY - dy)
-                DrawScaledPixel(wideLeft, bottomArcCenterY + dy, color, wideWidth, 1);  // Bottom band
+                DrawScaledPixel(wideLeft, bottomArcCenterY + dy, mapped, wideWidth, 1);  // Bottom band
 
             // Narrow scanline: vertical offset dx, horizontal span covers 2*dy+1 cells (other octant)
             if (dx != dy)
             {
                 int narrowLeft  = leftArcCenterX - dy;
                 int narrowWidth = rightArcCenterX + dy - narrowLeft + 1; // = width - 2*cornerRadius + 2*dy
-                DrawScaledPixel(narrowLeft, topArcCenterY    - dx, color, narrowWidth, 1);  // Top band
+                DrawScaledPixel(narrowLeft, topArcCenterY    - dx, mapped, narrowWidth, 1);  // Top band
                 if (bottomArcCenterY + dx != topArcCenterY - dx)
-                    DrawScaledPixel(narrowLeft, bottomArcCenterY + dx, color, narrowWidth, 1);  // Bottom band
+                    DrawScaledPixel(narrowLeft, bottomArcCenterY + dx, mapped, narrowWidth, 1);  // Bottom band
             }
         });
     }

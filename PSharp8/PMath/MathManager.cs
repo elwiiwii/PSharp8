@@ -57,12 +57,9 @@ internal class MathManager
         return F32.FromRaw((int)(_sinDict.LookupTable[angle.Raw / 10.0] * 10));
     }
 
-    internal void Srand(F32 seed, Random? r = null)
+    internal void Srand(F32 seed)
     {
-        int s = (int)(seed.Double * 255) & 0xFF;
-        if (r is not null)
-            r = new Random(s);
-        else
-            _random = new Random(s);
+        int s = seed.Raw;
+        _random = new Random(s);
     }
 }
