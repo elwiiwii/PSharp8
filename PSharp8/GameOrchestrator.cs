@@ -18,6 +18,7 @@ public class GameOrchestrator : IDisposable
     private readonly AudioManager _audioManager;
     private readonly GraphicsManager _graphicsManager;
     private readonly IInputManager _inputManager;
+    private readonly IInputProvider _provider;
     private readonly MathManager _mathManager;
     private readonly MemoryManager? _memoryManager; // TODO
     private readonly SceneManager _sceneManager;
@@ -40,7 +41,7 @@ public class GameOrchestrator : IDisposable
         GraphicsDevice graphicsDevice,
         GraphicsDeviceManager graphicsDeviceManager,
         GameWindow window,
-        InputBindings? bindings = null,
+        IInputProvider? inputProvider = null,
         BtnpConfig? btnpConfig = null,
         IInputManager? inputManager = null)
     {
@@ -48,7 +49,8 @@ public class GameOrchestrator : IDisposable
             musicDirectory ?? throw new ArgumentNullException(nameof(musicDirectory)));
         _sfxDirectory = sfxDirectory ?? throw new ArgumentNullException(nameof(sfxDirectory));
         _texturesDirectory = texturesDirectory ?? throw new ArgumentNullException(nameof(texturesDirectory));
-        _inputManager = inputManager ?? new InputManager(bindings ?? InputBindings.Default, btnpConfig);
+        _provider = inputProvider ?? new NullInputProvider();
+        _inputManager = inputManager ?? new InputManager(_provider, btnpConfig);
 
         ArgumentNullException.ThrowIfNull(defaultScene);
         ArgumentNullException.ThrowIfNull(graphicsDevice);
@@ -176,8 +178,21 @@ public class GameOrchestrator : IDisposable
         }
     }
 
+    public void UpdateInput(TimeSpan elapsed)
+        => _inputManager.Update(elapsed);
+
+    /// <inheritdoc cref="UpdateInput(TimeSpan)"/>
+    [Obsolete(
+        "Pass events via IInputProvider instead. " +
+        "Use UpdateInput(TimeSpan elapsed) with a PollingInputProvider or custom IInputProvider. " +
+        "If reactivating this overload, ensure base.Update() is called before UpdateInput() — " +
+        "see EventInputManager remarks for details.")]
     public void UpdateInput(TimeSpan elapsed, IReadOnlyList<InputEvent> events)
-        => _inputManager.Update(elapsed, events);
+    {
+        // Delegate to the polling overload; event list is intentionally ignored.
+        // Reactivate EventInputManager to restore full event-path behaviour.
+        _inputManager.Update(elapsed);
+    }
 
     public void Update(TimeSpan elapsed)
     {
@@ -257,7 +272,7 @@ public class GameOrchestrator : IDisposable
     public void ApplyInputSettings(InputBindings bindings, BtnpConfig? btnpConfig = null)
     {
         ArgumentNullException.ThrowIfNull(bindings);
-        _inputManager.SetBindings(bindings);
+        _provider.SetBindings(bindings);
         if (btnpConfig is not null && _inputManager is InputManager realManager)
             realManager.UpdateConfig(btnpConfig);
     }
@@ -299,6 +314,16 @@ public class GameOrchestrator : IDisposable
         _textureCache.Dispose();
         _audioManager.Dispose();
         _gameRenderTarget.Dispose();
+    }
+
+    /// <summary>
+    /// Default <see cref="IInputProvider"/> used when the caller does not supply one.
+    /// Reports all buttons as not held and ignores binding changes.
+    /// </summary>
+    private sealed class NullInputProvider : IInputProvider
+    {
+        public bool[] GetHeldButtons() => new bool[7];
+        public void SetBindings(InputBindings bindings) { }
     }
 }
 

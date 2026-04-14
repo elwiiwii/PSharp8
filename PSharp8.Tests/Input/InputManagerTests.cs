@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Microsoft.Xna.Framework.Input;
+using Moq;
 using PSharp8.Input;
 using Xunit;
 
@@ -11,22 +11,25 @@ public class InputManagerTests
     #region Helpers
     // --------------------------------------------------------------------------
 
-    private static InputManager CreateSut(InputBindings? bindings = null, BtnpConfig? config = null)
-        => new(bindings ?? InputBindings.Default, config);
+    /// <summary>Creates a mock provider reporting <paramref name="held"/> buttons as held.</summary>
+    private static Mock<IInputProvider> ProviderWith(params PicoButton[] held)
+    {
+        var state = new bool[7];
+        foreach (var b in held) state[(int)b] = true;
+        var mock = new Mock<IInputProvider>();
+        mock.Setup(p => p.GetHeldButtons()).Returns(state);
+        return mock;
+    }
 
-    private static List<InputEvent> NoEvents() => [];
+    private static Mock<IInputProvider> NoButtonsHeld()
+    {
+        var mock = new Mock<IInputProvider>();
+        mock.Setup(p => p.GetHeldButtons()).Returns(new bool[7]);
+        return mock;
+    }
 
-    private static InputEvent KeyDown(Keys key, ulong timestampNs = 0UL) =>
-        new(new KeyboardSource(key), IsDown: true, TimestampNs: timestampNs);
-
-    private static InputEvent KeyUp(Keys key, ulong timestampNs = 0UL) =>
-        new(new KeyboardSource(key), IsDown: false, TimestampNs: timestampNs);
-
-    private static InputBindings BindOnly(PicoButton button, InputSource source) =>
-        new(new Dictionary<PicoButton, IReadOnlyList<InputSource>>
-        {
-            [button] = new List<InputSource> { source },
-        });
+    private static InputManager CreateSut(IInputProvider provider, BtnpConfig? config = null)
+        => new(provider, config);
 
     // --------------------------------------------------------------------------
     #endregion
@@ -34,44 +37,18 @@ public class InputManagerTests
     // --------------------------------------------------------------------------
 
     [Fact]
-    public void Constructor_ThrowsArgumentNullException_WhenBindingsIsNull()
+    public void Constructor_ThrowsArgumentNullException_WhenProviderIsNull()
     {
-        var act = () => new InputManager(bindings: null!);
+        var act = () => new InputManager(provider: null!);
 
         act.Should().Throw<ArgumentNullException>()
-           .WithParameterName("bindings");
+           .WithParameterName("provider");
     }
 
     [Fact]
-    public void Constructor_UsesDefaultBtnpConfig_WhenConfigIsNull()
+    public void Constructor_DoesNotThrow_WhenConfigIsNull()
     {
-        var act = () => CreateSut(config: null);
-
-        act.Should().NotThrow();
-    }
-
-    // --------------------------------------------------------------------------
-    #endregion
-    #region SetBindings
-    // --------------------------------------------------------------------------
-
-    [Fact]
-    public void SetBindings_ThrowsArgumentNullException_WhenBindingsIsNull()
-    {
-        var sut = CreateSut();
-
-        var act = () => sut.SetBindings(null!);
-
-        act.Should().Throw<ArgumentNullException>()
-           .WithParameterName("bindings");
-    }
-
-    [Fact]
-    public void SetBindings_DoesNotThrow_WhenBindingsIsValid()
-    {
-        var sut = CreateSut();
-
-        var act = () => sut.SetBindings(InputBindings.Default);
+        var act = () => CreateSut(NoButtonsHeld().Object, config: null);
 
         act.Should().NotThrow();
     }
@@ -82,27 +59,25 @@ public class InputManagerTests
     // --------------------------------------------------------------------------
 
     [Fact]
-    public void Update_DoesNotThrow_WhenCalledWithEmptyEventList()
+    public void Update_DoesNotThrow_WhenNoButtonsHeld()
     {
-        var sut = CreateSut();
+        var sut = CreateSut(NoButtonsHeld().Object);
 
-        var act = () => sut.Update(TimeSpan.FromMilliseconds(16), NoEvents());
+        var act = () => sut.Update(TimeSpan.FromMilliseconds(16));
 
         act.Should().NotThrow();
     }
 
     [Fact]
-    public void Update_DoesNotThrow_WhenCalledWithEvents()
+    public void Update_CallsGetHeldButtons_EachFrame()
     {
-        var sut = CreateSut();
-        var events = new List<InputEvent>
-        {
-            new(new KeyboardSource(Keys.Left), IsDown: true, TimestampNs: 1000UL),
-        };
+        var mock = NoButtonsHeld();
+        var sut = CreateSut(mock.Object);
 
-        var act = () => sut.Update(TimeSpan.FromMilliseconds(16), events);
+        sut.Update(TimeSpan.FromMilliseconds(16));
+        sut.Update(TimeSpan.FromMilliseconds(16));
 
-        act.Should().NotThrow();
+        mock.Verify(p => p.GetHeldButtons(), Times.Exactly(2));
     }
 
     // --------------------------------------------------------------------------
@@ -113,8 +88,8 @@ public class InputManagerTests
     [Fact]
     public void Btn_ReturnsFalse_WhenInputBlocked()
     {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]);
+        var sut = CreateSut(ProviderWith(PicoButton.Left).Object);
+        sut.Update(TimeSpan.FromMilliseconds(16));
         sut.InputBlocked = true;
 
         sut.Btn((int)PicoButton.Left, 0).Should().BeFalse();
@@ -123,8 +98,8 @@ public class InputManagerTests
     [Fact]
     public void Btn_ReturnsFalse_WhenButtonNotHeld()
     {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), NoEvents());
+        var sut = CreateSut(NoButtonsHeld().Object);
+        sut.Update(TimeSpan.FromMilliseconds(16));
 
         sut.Btn((int)PicoButton.Left, 0).Should().BeFalse();
     }
@@ -132,8 +107,8 @@ public class InputManagerTests
     [Fact]
     public void Btn_ReturnsTrue_WhenButtonIsHeld()
     {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]);
+        var sut = CreateSut(ProviderWith(PicoButton.Left).Object);
+        sut.Update(TimeSpan.FromMilliseconds(16));
 
         sut.Btn((int)PicoButton.Left, 0).Should().BeTrue();
     }
@@ -141,19 +116,13 @@ public class InputManagerTests
     [Fact]
     public void Btn_ReturnsFalse_AfterButtonReleased()
     {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]);
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyUp(Keys.Left)]);
+        var mock = ProviderWith(PicoButton.Left);
+        var sut = CreateSut(mock.Object);
+        sut.Update(TimeSpan.FromMilliseconds(16));
 
-        sut.Btn((int)PicoButton.Left, 0).Should().BeFalse();
-    }
-
-    [Fact]
-    public void Btn_ReturnsFalse_ForSubFrameTap()
-    {
-        // KeyDown then KeyUp in same Update call — _heldNow ends as false
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left, 0UL), KeyUp(Keys.Left, 1UL)]);
+        // Release the button
+        mock.Setup(p => p.GetHeldButtons()).Returns(new bool[7]);
+        sut.Update(TimeSpan.FromMilliseconds(16));
 
         sut.Btn((int)PicoButton.Left, 0).Should().BeFalse();
     }
@@ -166,8 +135,8 @@ public class InputManagerTests
     [Fact]
     public void Btnp_ReturnsFalse_WhenInputBlocked()
     {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]);
+        var sut = CreateSut(ProviderWith(PicoButton.Left).Object);
+        sut.Update(TimeSpan.FromMilliseconds(16));
         sut.InputBlocked = true;
 
         sut.Btnp((int)PicoButton.Left, 0).Should().BeFalse();
@@ -176,19 +145,20 @@ public class InputManagerTests
     [Fact]
     public void Btnp_ReturnsTrue_OnFreshPress()
     {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]);
+        var sut = CreateSut(ProviderWith(PicoButton.Left).Object);
+        sut.Update(TimeSpan.FromMilliseconds(16));
 
         sut.Btnp((int)PicoButton.Left, 0).Should().BeTrue();
     }
 
     [Fact]
-    public void Btnp_ReturnsFalse_WhileHeld_BeforeInitialRepeat()
+    public void Btnp_ReturnsFalse_OnSecondFrame_WhileHeld_BeforeInitialRepeat()
     {
         var config = new BtnpConfig(InitialRepeatMs: 100.0, SubsequentRepeatMs: 50.0);
-        var sut = CreateSut(config: config);
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]); // fresh press fires
-        sut.Update(TimeSpan.FromMilliseconds(50), NoEvents());            // 50ms held < 100ms initial repeat
+        var mock = ProviderWith(PicoButton.Left);
+        var sut = CreateSut(mock.Object, config);
+        sut.Update(TimeSpan.FromMilliseconds(16));  // fresh press fires
+        sut.Update(TimeSpan.FromMilliseconds(50));  // 50ms held < 100ms initial repeat
 
         sut.Btnp((int)PicoButton.Left, 0).Should().BeFalse();
     }
@@ -197,9 +167,10 @@ public class InputManagerTests
     public void Btnp_ReturnsTrue_AfterInitialRepeat()
     {
         var config = new BtnpConfig(InitialRepeatMs: 100.0, SubsequentRepeatMs: 50.0);
-        var sut = CreateSut(config: config);
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]); // fresh press
-        sut.Update(TimeSpan.FromMilliseconds(200), NoEvents());           // 200ms >= 100ms → repeat fires
+        var mock = ProviderWith(PicoButton.Left);
+        var sut = CreateSut(mock.Object, config);
+        sut.Update(TimeSpan.FromMilliseconds(16));   // fresh press
+        sut.Update(TimeSpan.FromMilliseconds(200));  // 200ms >= 100ms → repeat fires
 
         sut.Btnp((int)PicoButton.Left, 0).Should().BeTrue();
     }
@@ -208,138 +179,40 @@ public class InputManagerTests
     public void Btnp_ReturnsTrue_AtSubsequentRepeatIntervals()
     {
         var config = new BtnpConfig(InitialRepeatMs: 100.0, SubsequentRepeatMs: 50.0);
-        var sut = CreateSut(config: config);
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]); // fresh press
-        sut.Update(TimeSpan.FromMilliseconds(200), NoEvents());           // initial repeat fires
-        sut.Update(TimeSpan.FromMilliseconds(100), NoEvents());           // 100ms >= 50ms subsequent repeat
+        var mock = ProviderWith(PicoButton.Left);
+        var sut = CreateSut(mock.Object, config);
+        sut.Update(TimeSpan.FromMilliseconds(16));   // fresh press
+        sut.Update(TimeSpan.FromMilliseconds(200));  // initial repeat fires
+        sut.Update(TimeSpan.FromMilliseconds(100));  // 100ms >= 50ms → subsequent repeat
 
         sut.Btnp((int)PicoButton.Left, 0).Should().BeTrue();
-    }
-
-    [Fact]
-    public void Btnp_ReturnsTrue_ForSubFrameTap()
-    {
-        // KeyDown + KeyUp in same frame — _pressedThisFrame is true even though _heldNow is false
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left, 0UL), KeyUp(Keys.Left, 1UL)]);
-
-        sut.Btnp((int)PicoButton.Left, 0).Should().BeTrue();
-    }
-
-    [Fact]
-    public void Btnp_ReturnsFalse_OnSubsequentFrame_ForSubFrameTap()
-    {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left, 0UL), KeyUp(Keys.Left, 1UL)]);
-        sut.Update(TimeSpan.FromMilliseconds(16), NoEvents()); // _pressedThisFrame cleared
-
-        sut.Btnp((int)PicoButton.Left, 0).Should().BeFalse();
     }
 
     [Fact]
     public void Btnp_Pause_ReturnsFalse_WhenHeld()
     {
-        // Pause has no autorepeat — only the first-press frame fires Btnp
+        // Pause has no auto-repeat — only the first-press frame fires Btnp
         var config = new BtnpConfig(InitialRepeatMs: 100.0, SubsequentRepeatMs: 50.0);
-        var sut = CreateSut(config: config);
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Escape)]); // first frame fires
-        sut.Update(TimeSpan.FromMilliseconds(200), NoEvents());             // held for 200ms > InitialRepeatMs
+        var mock = ProviderWith(PicoButton.Pause);
+        var sut = CreateSut(mock.Object, config);
+        sut.Update(TimeSpan.FromMilliseconds(16));   // first frame fires
+        sut.Update(TimeSpan.FromMilliseconds(200));  // held for 200ms > InitialRepeatMs
 
         sut.Btnp((int)PicoButton.Pause, 0).Should().BeFalse();
     }
 
     [Fact]
-    public void Btnp_Pause_ReturnsTrue_ForSubFrameTap()
+    public void Btnp_ReturnsFalse_OnSecondFrame_WhenAlreadyHeld()
     {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Escape, 0UL), KeyUp(Keys.Escape, 1UL)]);
+        // Frame 1: not-held → held = fresh press (Btnp true)
+        // Frame 2: held → held = no fresh press, no repeat yet (Btnp false)
+        var config = new BtnpConfig(InitialRepeatMs: 500.0, SubsequentRepeatMs: 50.0);
+        var mock = ProviderWith(PicoButton.Left);
+        var sut = CreateSut(mock.Object, config);
+        sut.Update(TimeSpan.FromMilliseconds(16)); // fresh press
+        sut.Update(TimeSpan.FromMilliseconds(16)); // still held, repeat not reached
 
-        sut.Btnp((int)PicoButton.Pause, 0).Should().BeTrue();
-    }
-
-    // --------------------------------------------------------------------------
-    #endregion
-    #region Debounce
-    // --------------------------------------------------------------------------
-
-    [Fact]
-    public void Btn_ReturnsTrue_WhenKeyUpWithinDebounceWindowIsDiscarded()
-    {
-        // KeyDown at t=1s accepted; KeyUp at t=1s+10ms is within 50ms window → discarded → button stays held
-        var config = new BtnpConfig(DebounceMs: 50.0);
-        var sut = CreateSut(config: config);
-        var events = new List<InputEvent>
-        {
-            KeyDown(Keys.Left, 1_000_000_000UL),  // t=1s — accepted (1s-0 >> 50ms window)
-            KeyUp(Keys.Left,   1_010_000_000UL),  // t=1s+10ms — discarded (10ms < 50ms window)
-        };
-        sut.Update(TimeSpan.FromMilliseconds(16), events);
-
-        sut.Btn((int)PicoButton.Left, 0).Should().BeTrue();
-    }
-
-    [Fact]
-    public void Btn_ReturnsFalse_WhenKeyUpIsOutsideDebounceWindow()
-    {
-        // KeyDown at t=1s accepted; KeyUp at t=1s+60ms is outside 50ms window → accepted → button released
-        var config = new BtnpConfig(DebounceMs: 50.0);
-        var sut = CreateSut(config: config);
-        var events = new List<InputEvent>
-        {
-            KeyDown(Keys.Left, 1_000_000_000UL),  // t=1s — accepted
-            KeyUp(Keys.Left,   1_060_000_000UL),  // t=1s+60ms — accepted (60ms > 50ms window)
-        };
-        sut.Update(TimeSpan.FromMilliseconds(16), events);
-
-        sut.Btn((int)PicoButton.Left, 0).Should().BeFalse();
-    }
-
-    [Fact]
-    public void Btnp_ReturnsTrue_WhenDebounceIsZero_AndEventsHaveSameTimestamp()
-    {
-        // DebounceMs=0 means no debounce; duplicate KeyDown at same timestamp is harmless
-        var config = new BtnpConfig(DebounceMs: 0.0);
-        var sut = CreateSut(config: config);
-        var events = new List<InputEvent>
-        {
-            KeyDown(Keys.Left, 1_000_000_000UL),
-            KeyDown(Keys.Left, 1_000_000_000UL), // duplicate — redundant but must not crash
-        };
-
-        var act = () => sut.Update(TimeSpan.FromMilliseconds(16), events);
-        act.Should().NotThrow();
-
-        sut.Btnp((int)PicoButton.Left, 0).Should().BeTrue();
-    }
-
-    // --------------------------------------------------------------------------
-    #endregion
-    #region SetBindings state clearing
-    // --------------------------------------------------------------------------
-
-    [Fact]
-    public void SetBindings_ClearsHeldState()
-    {
-        var sut = CreateSut();
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.Left)]);
-        sut.SetBindings(InputBindings.Default);
-
-        sut.Btn((int)PicoButton.Left, 0).Should().BeFalse();
-    }
-
-    [Fact]
-    public void SetBindings_NewBindingsAreUsed()
-    {
-        var initialBindings = BindOnly(PicoButton.Left, new KeyboardSource(Keys.A));
-        var sut = CreateSut(bindings: initialBindings);
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.A)]);
-        sut.Btn((int)PicoButton.Left, 0).Should().BeTrue(); // press registered under old binding
-
-        var newBindings = BindOnly(PicoButton.Left, new KeyboardSource(Keys.Z));
-        sut.SetBindings(newBindings);
-        sut.Update(TimeSpan.FromMilliseconds(16), [KeyDown(Keys.A)]); // old key no longer bound
-
-        sut.Btn((int)PicoButton.Left, 0).Should().BeFalse();
+        sut.Btnp((int)PicoButton.Left, 0).Should().BeFalse();
     }
 
     // --------------------------------------------------------------------------

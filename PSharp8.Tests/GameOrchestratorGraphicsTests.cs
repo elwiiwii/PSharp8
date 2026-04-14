@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Xna.Framework.Input;
+using Moq;
 using PSharp8.Audio;
 using PSharp8.Input;
 using PSharp8.Scene;
@@ -19,7 +20,7 @@ public class GameOrchestratorGraphicsTests : GraphicsTestBase
     #region Helpers
     // --------------------------------------------------
 
-    private GameOrchestrator BuildOrchestrator(IScene? scene = null)
+    private GameOrchestrator BuildOrchestrator(IScene? scene = null, IInputProvider? inputProvider = null)
     {
         scene ??= new NullScene();
         return new GameOrchestrator(
@@ -29,7 +30,8 @@ public class GameOrchestratorGraphicsTests : GraphicsTestBase
             scene,
             _gd,
             _fixture.GraphicsDeviceManager,
-            _fixture.Window);
+            _fixture.Window,
+            inputProvider: inputProvider);
     }
 
     private sealed class NullScene : IScene
@@ -311,7 +313,9 @@ public class GameOrchestratorGraphicsTests : GraphicsTestBase
     [Fact]
     public void ApplyInputSettings_UpdatesActiveBindings()
     {
-        using var sut = BuildOrchestrator();
+        var mockProvider = new Mock<IInputProvider>();
+        mockProvider.Setup(p => p.GetHeldButtons()).Returns(new bool[7]);
+        using var sut = BuildOrchestrator(inputProvider: mockProvider.Object);
         var newBindings = new InputBindings(new Dictionary<PicoButton, IReadOnlyList<InputSource>>
         {
             [PicoButton.Left] = [new KeyboardSource(Keys.Q)],
@@ -319,8 +323,7 @@ public class GameOrchestratorGraphicsTests : GraphicsTestBase
 
         sut.ApplyInputSettings(newBindings);
 
-        ((InputManager)sut.InputManager).Bindings[PicoButton.Left].Should().ContainSingle()
-            .Which.Should().Be(new KeyboardSource(Keys.Q));
+        mockProvider.Verify(p => p.SetBindings(newBindings), Times.Once);
     }
 
     [Fact]
